@@ -189,6 +189,7 @@ A aplicação estará disponível em `http://localhost:5173`
 ## 👥 Time
 
 Projeto desenvolvido para a disciplina de **Interação Humano-Computador (IHC)**.
+Felipe Murilo Ribeiro Ribeiro
 
 ---
 
