@@ -1,4 +1,4 @@
-# 💸 FinTrack — Seu Gerenciador Financeiro Pessoal
+# 💸 Tio Patinhas — Seu Gerenciador Financeiro Pessoal
 
 > Monitore seus gastos, controle suas assinaturas e entenda para onde seu dinheiro vai — tudo em um só lugar.
 
