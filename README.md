@@ -6,7 +6,7 @@
 
 ## 📋 Visão Geral do Produto
 
-**FinTrack** é uma aplicação web/mobile que centraliza o controle financeiro pessoal do usuário, dividindo seus gastos em duas grandes categorias:
+**Tio Patinhas** é uma aplicação web/mobile que centraliza o controle financeiro pessoal do usuário, dividindo seus gastos em duas grandes categorias:
 
 - **Gastos Fixos** — despesas recorrentes e previsíveis (aluguel, financiamentos, assinaturas de streaming, SaaS, planos de saúde, etc.), com um módulo dedicado de **gerenciador de assinaturas** que alerta sobre renovações e calcula o custo mensal consolidado.
 - **Gastos Variáveis** — despesas do dia a dia e imprevistos (supermercado, farmácia, combustível, reparos, lazer), categorizáveis e rastreáveis ao longo do tempo.
@@ -17,10 +17,13 @@ O resultado é um **dashboard financeiro pessoal** que mostra o saldo real do us
 
 ## 🎯 Escopo do Projeto
 
-O projeto está dividido em **duas fases** com escopos e horizontes temporais distintos:
+O projeto está agora dividido em **verticais de negócio**, focando tanto no consumidor final (B2C) quanto no mercado corporativo (B2B).
 
-### Fase 1 — MVP (Escopo IHC / Entregável Acadêmico)
+### 👤 Vertical B2C — Finanças Pessoais
 
+Foco no usuário final para controle financeiro. A vertical B2C está estruturada em duas formas/fases:
+
+#### Forma 1: MVP (Controle Essencial)
 Foco em UX, usabilidade e funcionalidades essenciais de controle financeiro.
 
 | Módulo | Descrição |
@@ -32,8 +35,7 @@ Foco em UX, usabilidade e funcionalidades essenciais de controle financeiro.
 | 📊 Dashboard | Resumo mensal: total gasto, saldo estimado, gráficos por categoria |
 | 📁 Histórico | Visualização e filtragem de transações por período |
 
-### Fase 2 — Evolução Inteligente (Pós-IHC / Roadmap Futuro)
-
+#### Forma 2: Evolução Inteligente (Recomendações e IA)
 Camada de inteligência artificial para análise de perfil e sugestões de investimento.
 
 | Módulo | Descrição |
@@ -42,6 +44,19 @@ Camada de inteligência artificial para análise de perfil e sugestões de inves
 | 📈 Perfil de Investidor | Classificação automática (conservador, moderado, arrojado) |
 | 💡 Sugestões de Ações | Recomendações de ativos com base no saldo disponível |
 | 🔔 Alertas Inteligentes | Notificações preditivas sobre padrões de gasto anômalos |
+
+### 🏢 Vertical B2B — FinOps para IA (LLM Cost Tracker & Benchmark)
+
+Nova frente focada em empresas que utilizam Inteligência Artificial e precisam controlar a eficiência e os custos operacionais dos Modelos de Linguagem (LLMs).
+
+> 🛡️ **Privacidade em 1º Lugar (Zero-Data Retention):** A aplicação **nunca** salvará o conteúdo dos prompts ou as respostas (dados sensíveis da empresa). O sistema irá processar, extrair as métricas (tokens, latência, etc.) e descartar os textos imediatamente, salvando **apenas** os resultados quantitativos.
+
+| Módulo | Descrição |
+|---|---|
+| 💰 Skill de Custo (Cost Tracker) | Sistema que intercepta a chamada de IA, calcula os tokens utilizados e mostra **em dinheiro (R$/$)** o custo exato daquele prompt específico em tempo real. |
+| 🏎️ Benchmarks de Modelos | Execução de testes automatizados comparando diferentes modelos (GPT-4, Claude, Gemini, Llama) para analisar qual apresenta **melhor custo-benefício e eficiência** para o sistema específico da empresa. |
+| 📊 Dashboard Gerencial | Painel consolidado mostrando o custo total de IA por projeto, modelo ou departamento da empresa. |
+| 📑 Relatórios Estratégicos | Geração de relatórios periódicos sugerindo otimizações e migrações de modelo para redução de custos sem perda de performance. |
 
 ---
 
