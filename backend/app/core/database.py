@@ -1,0 +1,17 @@
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from app.core.config import settings
+
+engine = create_engine(settings.POSTGRES_URL, pool_pre_ping=True)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+def get_db():
+    """
+    Gera uma sessão de banco de dados por request.
+    Fecha automaticamente ao final.
+    """
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
