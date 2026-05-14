@@ -1,213 +1,422 @@
-# 💸 Tio Patinhas — Seu Gerenciador Financeiro Pessoal
+# 💸 Tio Patinhas (FinTrack)
 
-> Monitore seus gastos, controle suas assinaturas e entenda para onde seu dinheiro vai — tudo em um só lugar.
+Duas soluções, uma base técnica: controle financeiro pessoal com agentes de IA e observabilidade de custos de IA para empresas.
 
----
+## Produtos
 
-## 📋 Visão Geral do Produto
-
-**Tio Patinhas** é uma aplicação web/mobile que centraliza o controle financeiro pessoal do usuário, dividindo seus gastos em duas grandes categorias:
-
-- **Gastos Fixos** — despesas recorrentes e previsíveis (aluguel, financiamentos, assinaturas de streaming, SaaS, planos de saúde, etc.), com um módulo dedicado de **gerenciador de assinaturas** que alerta sobre renovações e calcula o custo mensal consolidado.
-- **Gastos Variáveis** — despesas do dia a dia e imprevistos (supermercado, farmácia, combustível, reparos, lazer), categorizáveis e rastreáveis ao longo do tempo.
-
-O resultado é um **dashboard financeiro pessoal** que mostra o saldo real do usuário, tendências de consumo e, no futuro, recomendações inteligentes de investimento baseadas no que sobrou no mês.
+| Produto | FinTrack Personal | FinTrack Enterprise |
+|---|---|---|
+| **Público** | Pessoa física | Times e empresas que usam LLMs/APIs de IA |
+| **Core** | Agentes financeiros alimentados por Zettelkasten | Observabilidade de custo por prompt, agente e modelo |
+| **Diferencial** | Second brain Obsidian → RAG → decisões financeiras | Middleware que intercepta chamadas LLM e captura custo real |
+| **Status** | Fase ativa | Módulo Enterprise — inicia após Personal estável |
 
 ---
 
-## 🎯 Escopo do Projeto
+## Parte I — FinTrack Personal
 
-O projeto está agora dividido em **verticais de negócio**, focando tanto no consumidor final (B2C) quanto no mercado corporativo (B2B).
+### Visão Geral
+Controle financeiro pessoal orientado a agentes. O usuário escreve no Obsidian usando Zettelkasten — notas atômicas, MOCs por domínio — e esse vault vira o contexto vivo dos agentes. Modelos matemáticos otimizam cada decisão: orçamento via programação linear, anomalias via Z-score, portfólio via Markowitz.
 
-### 👤 Vertical B2C — Finanças Pessoais
+### Arquitetura
 
-Foco no usuário final para controle financeiro. A vertical B2C está estruturada em duas formas/fases:
-
-#### Forma 1: MVP (Controle Essencial)
-Foco em UX, usabilidade e funcionalidades essenciais de controle financeiro.
-
-| Módulo | Descrição |
-|---|---|
-| 🔐 Autenticação | Cadastro e login de usuário |
-| 💳 Gastos Fixos | CRUD de despesas recorrentes com data de vencimento |
-| 📡 Gerenciador de Assinaturas | Listagem, categorização e alertas de renovação |
-| 🛒 Gastos Variáveis | Registro rápido de despesas com categoria, valor e data |
-| 📊 Dashboard | Resumo mensal: total gasto, saldo estimado, gráficos por categoria |
-| 📁 Histórico | Visualização e filtragem de transações por período |
-
-#### Forma 2: Evolução Inteligente (Recomendações e IA)
-Camada de inteligência artificial para análise de perfil e sugestões de investimento.
-
-| Módulo | Descrição |
-|---|---|
-| 🤖 Motor de IA | Análise do histórico de gastos e perfil do usuário |
-| 📈 Perfil de Investidor | Classificação automática (conservador, moderado, arrojado) |
-| 💡 Sugestões de Ações | Recomendações de ativos com base no saldo disponível |
-| 🔔 Alertas Inteligentes | Notificações preditivas sobre padrões de gasto anômalos |
-
-### 🏢 Vertical B2B — FinOps para IA (LLM Cost Tracker & Benchmark)
-
-Nova frente focada em empresas que utilizam Inteligência Artificial e precisam controlar a eficiência e os custos operacionais dos Modelos de Linguagem (LLMs).
-
-> 🛡️ **Privacidade em 1º Lugar (Zero-Data Retention):** A aplicação **nunca** salvará o conteúdo dos prompts ou as respostas (dados sensíveis da empresa). O sistema irá processar, extrair as métricas (tokens, latência, etc.) e descartar os textos imediatamente, salvando **apenas** os resultados quantitativos.
-
-| Módulo | Descrição |
-|---|---|
-| 💰 Skill de Custo (Cost Tracker) | Sistema que intercepta a chamada de IA, calcula os tokens utilizados e mostra **em dinheiro (R$/$)** o custo exato daquele prompt específico em tempo real. |
-| 🏎️ Benchmarks de Modelos | Execução de testes automatizados comparando diferentes modelos (GPT-4, Claude, Gemini, Llama) para analisar qual apresenta **melhor custo-benefício e eficiência** para o sistema específico da empresa. |
-| 📊 Dashboard Gerencial | Painel consolidado mostrando o custo total de IA por projeto, modelo ou departamento da empresa. |
-| 📑 Relatórios Estratégicos | Geração de relatórios periódicos sugerindo otimizações e migrações de modelo para redução de custos sem perda de performance. |
-
----
-
-## 🏗️ Arquitetura e Tecnologias
-
-### Fase 1 — Stack Principal
-
-```
-┌─────────────────────────────────────────────────┐
-│                   FRONTEND                      │
-│         React + TypeScript + Vite               │
-│   (React Query · Recharts · React Hook Form)    │
-└─────────────────┬───────────────────────────────┘
-                  │ REST / JSON
-┌─────────────────▼───────────────────────────────┐
-│                   BACKEND                       │
-│           Java 21 + Spring Boot 3               │
-│  (Spring Security · Spring Data · JWT Auth)     │
-└─────────────────┬───────────────────────────────┘
-                  │
-┌─────────────────▼───────────────────────────────┐
-│                  BANCO DE DADOS                 │
-│               MongoDB (NoSQL)                   │
-│  (documentos flexíveis para gastos e perfis)    │
-└─────────────────────────────────────────────────┘
+```text
+┌──────────────────────────────────────────────────────┐
+│                    FRONTEND                          │
+│           React 18 + TypeScript + Vite               │
+│     (Chat UI · Dashboard · Vault Preview)            │
+└──────────────────────┬───────────────────────────────┘
+                       │ REST + SSE
+┌──────────────────────▼───────────────────────────────┐
+│                    BACKEND                           │
+│             Python 3.11 + FastAPI                    │
+│   /api/*  →  CRUD  │  /chat  →  Agentes             │
+│   /vault  →  Ingestion pipeline                     │
+└──────┬───────────────────────────────┬───────────────┘
+       │                               │
+┌──────▼──────────────┐    ┌───────────▼───────────────┐
+│    PostgreSQL        │    │          Redis            │
+│  + pgvector         │    │   cache · filas · pub/sub │
+└─────────────────────┘    └───────────────────────────┘
 ```
 
-#### Por que esse stack?
+#### Stack
 
-| Tecnologia | Justificativa |
+| Camada | Tecnologia |
 |---|---|
-| **React + TypeScript** | Ecossistema maduro, tipagem estática evita bugs de runtime, componentes reutilizáveis para o dashboard |
-| **Java + Spring Boot** | Robusto, amplamente adotado no mercado, excelente suporte a segurança (Spring Security + JWT) e testes |
-| **MongoDB** | Schema flexível ideal para gastos heterogêneos (cada tipo de gasto tem campos diferentes); escalabilidade horizontal nativa |
+| **Frontend** | React 18 + TypeScript + Vite |
+| **Backend** | Python 3.11 + FastAPI |
+| **Banco** | PostgreSQL + pgvector |
+| **Cache / Filas** | Redis |
+| **Agentes** | LangGraph + Anthropic SDK |
+| **Second Brain** | Obsidian Vault (Zettelkasten) |
 
----
+### 🧠 Second Brain — Zettelkasten no Obsidian
 
-### Fase 2 — Stack de IA
-
-```
-┌─────────────────────────────────────────────────┐
-│              SERVIÇO DE IA (Microserviço)        │
-│              Python + FastAPI                   │
-│  (scikit-learn · pandas · yfinance · LangChain) │
-└─────────────────┬───────────────────────────────┘
-                  │ REST / gRPC
-          Backend Spring Boot (Fase 1)
-```
-
-#### Por que Python para IA?
-
-| Tecnologia | Justificativa |
-|---|---|
-| **Python + FastAPI** | Ecossistema de ML/AI mais maduro disponível; FastAPI entrega performance assíncrona com tipagem |
-| **scikit-learn** | Algoritmos clássicos de classificação de perfil de investidor (k-NN, Random Forest) sem overhead de deep learning |
-| **yfinance / B3 APIs** | Acesso a dados históricos de ações da bolsa brasileira para sugestões contextualizadas |
-| **LangChain** | Orquestração de LLMs para geração de justificativas das recomendações em linguagem natural |
-
-> ⚠️ **Nota Arquitetural:** A IA é isolada como um **microserviço independente** para não acoplar complexidade ao backend principal e permitir evolução independente.
-
----
-
-## 📁 Estrutura Prevista do Repositório
-
-```
-ihc-p2/
-├── frontend/               # React + TypeScript
-│   ├── src/
-│   │   ├── components/     # Componentes reutilizáveis
-│   │   ├── pages/          # Páginas (Dashboard, Gastos, Assinaturas)
-│   │   ├── hooks/          # Custom hooks (useExpenses, useSubscriptions)
-│   │   ├── services/       # Camada de API (axios)
-│   │   └── types/          # Tipos TypeScript globais
-│   └── package.json
+#### Estrutura do Vault
+```text
+vault/
+├── 00-MOCs/                        # Maps of Content — índices de domínio
+│   ├── Budget MOC.md               → Budget Advisor
+│   ├── Investment MOC.md           → Investment Advisor
+│   ├── Spending Patterns MOC.md    → Insights Agent
+│   ├── Subscriptions MOC.md        → Subscription Auditor
+│   └── Financial Planning MOC.md  → Supervisor
 │
-├── backend/                # Java + Spring Boot
-│   ├── src/main/java/
-│   │   ├── controller/     # REST Controllers
-│   │   ├── service/        # Regras de negócio
-│   │   ├── repository/     # Spring Data MongoDB
-│   │   ├── model/          # Documentos MongoDB
-│   │   └── config/         # Spring Security, CORS, JWT
-│   └── pom.xml
+├── 10-Permanent/                   # Notas atômicas, evergreen
+│   ├── regra-50-30-20.md
+│   ├── fundo-emergencia.md
+│   └── ...
 │
-├── ai-service/             # Python + FastAPI (Fase 2)
-│   ├── app/
-│   │   ├── routers/        # Endpoints de análise
-│   │   ├── models/         # Modelos de ML
-│   │   └── services/       # Lógica de recomendação
-│   └── requirements.txt
+├── 20-Literature/
+└── 30-Fleeting/
+```
+
+Cada MOC mapeia para um agente especialista. O vault de cada usuário é indexado separadamente no pgvector (`WHERE user_id = ?`). Usuários e dados transacionais vivem no PostgreSQL — o vault guarda apenas conhecimento conceitual e metas pessoais.
+
+#### Frontmatter de nota
+```yaml
+---
+domain: budget
+agent: budget_advisor
+tags: [regra, alocação, renda]
+confidence: high
+---
+```
+
+#### Pipeline de Ingestion
+`Obsidian Vault` → `watchdog` → `Parser` → `Chunker` → `Embedder` → `pgvector`
+Watcher detecta mudanças em tempo real. Chunks respeitam fronteiras de nota atômica. MOCs são indexados inteiros.
+
+#### RAG Híbrido
+```text
+Query → BM25 (léxico) + pgvector (semântico)
+      → RRF Fusion
+      → Cross-encoder reranking
+      → Contexto injetado no prompt
+```
+
+### 🤖 Agentes e Modelos Matemáticos
+
+| Agente | Modelo Matemático | Tools |
+|---|---|---|
+| **Categorization** | Naive Bayes / Regressão Logística (confiança por classe) | `list_uncategorized`, `set_category`, `bulk_categorize` |
+| **Insights** | Z-score (anomalia), EMA (tendência), STL (sazonalidade) | `query_transactions`, `compare_periods`, `detect_anomalies` |
+| **Budget Advisor** | Programação Linear — scipy.optimize.linprog | `get_budget`, `project_month_end`, `suggest_allocation` |
+| **Subscription Auditor** | FFT (periodicidade), K-Means (duplicatas por embedding) | `list_subscriptions`, `detect_duplicates`, `estimate_annual_cost` |
+| **Investment Advisor** | Otimização de Markowitz — fronteira eficiente, max Sharpe | `get_user_profile`, `fetch_market_data`, `generate_allocation` |
+| **Conversational** | — (orquestra os outros em modo leitura) | todas as tools de leitura |
+
+#### Memória
+- **Short-term** → Estado da conversa (LangGraph)
+- **Long-term** → Vault Zettelkasten (pgvector, por user_id)
+- **Episodic** → Resumos mensais embedados
+
+#### Guardrails
+- **Investment Advisor:** apenas sugestões, nunca ordens, sempre com disclaimer
+- Actions que modificam dados exigem confirmação explícita no chat
+- Prompt + tools + resposta logados por interação (auditoria / LGPD)
+- Confiança marcada quando modelo tem incerteza alta
+
+### Estrutura — Personal
+
+```text
+fintrack/
 │
-├── docs/                   # Documentação e protótipos (Figma exports)
-├── CLAUDE.md               # Guia para AI assistants
-└── README.md
+├── vault/                          # Obsidian Vault (Zettelkasten)
+│   ├── 00-MOCs/
+│   ├── 10-Permanent/
+│   ├── 20-Literature/
+│   └── 30-Fleeting/
+│
+├── frontend/
+│   └── src/
+│       ├── components/
+│       │   ├── chat/
+│       │   ├── dashboard/
+│       │   └── vault/              # VaultPreview, NoteGraph (d3)
+│       ├── hooks/
+│       └── services/
+│
+├── backend/
+│   └── app/
+│       ├── api/                    # CRUD routes
+│       ├── agents/                 # Supervisor + especialistas
+│       ├── tools/                  # Tools tipadas (Pydantic)
+│       ├── vault/                  # watcher, parser, chunker, embedder
+│       ├── rag/                    # retriever, reranker, context_builder
+│       ├── models_math/            # classifier, anomaly, lp_budget, fft, markowitz
+│       ├── memory/
+│       ├── guardrails/
+│       └── main.py
+│
+└── eval/
+    ├── golden_dataset.json
+    └── run_eval.py
+```
+
+### Roadmap — Personal
+
+```text
+FASE 1 — Vault + Core  (3-4 semanas)
+  ├── Estrutura Zettelkasten no Obsidian
+  ├── FastAPI + PostgreSQL + pgvector + Auth
+  └── CRUD: transações, assinaturas, orçamentos
+
+FASE 2 — Ingestion Pipeline  (2 semanas)
+  ├── Vault watcher → parser → chunker → embedder → pgvector
+  └── Busca híbrida (BM25 + pgvector + RRF)
+
+FASE 3 — Primeiro Agente  (2 semanas)
+  ├── Anthropic SDK puro — entender o loop antes do framework
+  └── SSE streaming no frontend
+
+FASE 4 — Multi-Agente + Modelos Matemáticos  (8-10 semanas)
+  ├── LangGraph: Supervisor + 4 especialistas
+  ├── Modelos: Naive Bayes, Z-score, LP, FFT
+  └── Eval: golden dataset + LLM-as-judge
+
+FASE 5 — Refinamento  (2-3 meses)
+  ├── Investment Advisor + Markowitz
+  ├── Memória episódica
+  ├── Guardrails completos + LGPD
+  └── Open Finance via Pluggy
 ```
 
 ---
 
-## 🗺️ Roadmap
+## Parte II — FinTrack Enterprise
+### AI Cost Intelligence
+Empresas que usam LLMs e agentes de IA gastam dinheiro em cada prompt — e a maioria não sabe exatamente quanto, onde ou por quê. O FinTrack Enterprise resolve isso.
 
+### Por que encaixa
+O Personal já constrói a base técnica completa que o Enterprise precisa:
+
+| O que o Personal já tem | Como o Enterprise reutiliza |
+|---|---|
+| Agentes com tool calling | Middleware intercepta as mesmas chamadas |
+| Auditoria de prompt + resposta | Base do Cost Collector |
+| PostgreSQL + Redis | Mesma infra, novas tabelas |
+| Dashboard financeiro | Reaproveitado para custo de IA |
+| Modelos matemáticos | Anomalia de custo, projeções, alertas |
+| Custo por interação no roadmap | Virar produto, não só métrica interna |
+
+### Arquitetura Enterprise
+
+```text
+Aplicação cliente / API Gateway
+        │
+        ▼
+ AI Cost Middleware
+ captura: prompt · modelo · tokens · latência · resposta · custo
+        │
+        ▼
+ Cost Collector API  (/enterprise/events)
+ recebe eventos em tempo real via HTTP ou SDK
+        │
+        ▼
+ PostgreSQL + TimescaleDB
+ armazena api_usage_events como série temporal
+        │
+        ├── Agentes de análise
+        │   ├── Report Agent      → relatório financeiro/técnico automático
+        │   ├── Anomaly Agent     → detecta picos de custo anômalos
+        │   └── Budget Alert Agent → alerta estouro de orçamento por projeto
+        │
+        ▼
+ Dashboard B2B
+ custo por prompt · usuário · agente · modelo · período · projeto
 ```
-[IHC - Fase 1]                          [Pós-IHC - Fase 2]
-     │                                         │
-     ▼                                         ▼
-Semana 1-2: Setup + Auth           Mês 3: Microserviço Python/FastAPI
-Semana 3-4: Gastos Fixos           Mês 4: Coleta de dados + treinamento ML
-Semana 5-6: Assinaturas           Mês 5: Integração backend ↔ AI service
-Semana 7-8: Gastos Variáveis      Mês 6: Sugestões de ações + alertas
-Semana 9:   Dashboard + Gráficos  Mês 7: Beta fechado + refinamento
-Semana 10:  Testes de usabilidade Mês 8: Lançamento público
+
+### Módulo Backend — Enterprise
+
+```text
+backend/app/
+│
+├── b2b/
+│   ├── collector.py          # recebe e valida eventos de uso
+│   ├── pricing.py            # tabela de preços por modelo/provider (atualizada)
+│   ├── reports.py            # geração de relatório periódico (PDF / JSON)
+│   ├── alerts.py             # regras de alerta de estouro de orçamento
+│   └── schemas.py            # Pydantic schemas Enterprise
+│
+└── middleware/
+    └── ai_cost_tracker.py    # interceptor: envolve chamadas LLM e emite eventos
+```
+
+O `ai_cost_tracker.py` funciona como decorator/wrapper — qualquer chamada LLM do sistema passa por ele antes de chegar à API do provider:
+
+```python
+# Uso no agente
+@track_ai_cost(agent="budget_advisor", project="fintrack-personal")
+async def call_llm(messages, model):
+    return await anthropic.messages.create(...)
+
+# O middleware captura automaticamente:
+# tokens in/out · custo calculado · latência · status · model
+# e emite evento para o Cost Collector
+```
+
+### Schema Principal
+
+```sql
+CREATE TABLE api_usage_events (
+    id               UUID PRIMARY KEY,
+    organization_id  UUID NOT NULL,
+    project_id       UUID,
+    user_id          UUID,
+    agent_name       TEXT,
+    provider         TEXT,          -- anthropic, openai, gemini...
+    model            TEXT,
+    prompt_tokens    INTEGER,
+    completion_tokens INTEGER,
+    total_tokens     INTEGER,
+    input_cost_usd   NUMERIC(12,8),
+    output_cost_usd  NUMERIC(12,8),
+    total_cost_usd   NUMERIC(12,8),
+    latency_ms       INTEGER,
+    status           TEXT,          -- success, error, timeout
+    created_at       TIMESTAMPTZ NOT NULL
+);
+-- TimescaleDB: created_at como coluna de particionamento
+SELECT create_hypertable('api_usage_events', 'created_at');
+```
+
+TimescaleDB transforma `api_usage_events` em hypertable — queries de série temporal (custo por dia, por semana, por agente) ficam ordens de magnitude mais rápidas sem mudar o SQL.
+
+### Exemplo de evento capturado
+```yaml
+Prompt:    "Analise meus gastos do mês"
+Agente:    Budget Advisor
+Modelo:    claude-sonnet-4-20250514
+Projeto:   fintrack-personal
+
+Tokens:    Input: 1.240   Output: 580
+Custo:     Input: $0.0037  Output: $0.0087  Total: $0.0124
+Latência:  2.1s
+Status:    success
+```
+
+### Agentes Enterprise
+- **Report Agent**: Gera relatório financeiro/técnico automático em linguagem natural: custo total do período, breakdown por modelo, agente e projeto, tendência vs período anterior, top 10 prompts mais caros.
+- **Anomaly Agent**: Aplica Z-score e EMA sobre a série temporal de custos. Detecta picos anômalos e notifica: “custo do GPT-4o subiu 340% nas últimas 2 horas no projeto X.”
+- **Budget Alert Agent**: Monitora orçamentos por projeto/organização. Alerta em 70%, 90% e 100% do limite. Projeta data de estouro com base na taxa de consumo atual.
+
+### Estrutura — Enterprise
+
+```text
+fintrack/
+│
+├── frontend/
+│   └── src/
+│       └── components/
+│           └── enterprise/         # dashboards B2B separados do Personal
+│               ├── CostByAgent.tsx
+│               ├── CostByModel.tsx
+│               ├── CostTimeline.tsx
+│               └── BudgetAlerts.tsx
+│
+├── backend/
+│   └── app/
+│       ├── b2b/                    # collector, pricing, reports, alerts
+│       ├── middleware/             # ai_cost_tracker.py
+│       └── agents/
+│           └── enterprise/         # report_agent, anomaly_agent, budget_alert_agent
+│
+└── sdk/                            # SDK cliente leve para integração
+    ├── python/                     # pip install fintrack-sdk
+    └── typescript/                 # npm install @fintrack/sdk
+```
+
+O SDK cliente permite que qualquer empresa integre com poucas linhas:
+
+```python
+from fintrack_sdk import FinTrackMiddleware
+
+fintrack = FinTrackMiddleware(api_key="ft_...", project="meu-produto")
+
+@fintrack.track(agent="chat-bot")
+async def minha_chamada_llm(prompt):
+    ...
+```
+
+### Roadmap — Enterprise
+
+```text
+FASE 6 — Fundação Enterprise  (início após Personal estável)
+  ├── TimescaleDB adicionado ao Postgres existente
+  ├── Cost Collector API + schema api_usage_events
+  ├── ai_cost_tracker.py interceptando o próprio FinTrack
+  └── Dashboard básico: custo/dia por modelo e agente
+
+FASE 7 — Agentes Enterprise  (4-6 semanas)
+  ├── Report Agent (relatório periódico automático)
+  ├── Anomaly Agent (Z-score sobre série temporal de custos)
+  └── Budget Alert Agent (estouro de orçamento por projeto)
+
+FASE 8 — SDK + Multi-tenant  (2-3 meses)
+  ├── SDK Python + TypeScript para integração externa
+  ├── Multi-tenant com isolamento por organization_id
+  ├── Suporte a múltiplos providers (OpenAI, Gemini, Mistral...)
+  └── Exportação de relatórios (PDF, CSV, webhook)
 ```
 
 ---
 
-## 🚀 Como Rodar Localmente (Fase 1)
+## Como Rodar
 
-### Pré-requisitos
-- Node.js >= 20
-- Java 21 (JDK)
-- MongoDB rodando localmente ou via Docker
-- Docker (opcional, recomendado)
-
-### Com Docker Compose
+### Docker Compose
 ```bash
 docker-compose up --build
 ```
 
 ### Manual
 
+**Backend**
 ```bash
-# Backend
 cd backend
-./mvnw spring-boot:run
-
-# Frontend
-cd frontend
-npm install
-npm run dev
+pip install -r requirements.txt
+alembic upgrade head
+uvicorn app.main:app --reload --port 8000
 ```
 
-A aplicação estará disponível em `http://localhost:5173`
+**Frontend**
+```bash
+cd frontend
+npm install && npm run dev
+```
 
----
+**Variáveis de Ambiente (`backend/.env`)**
+```env
+POSTGRES_URL=postgresql://localhost:5432/fintrack
+REDIS_URL=redis://localhost:6379
+JWT_SECRET=<min 256 bits>
+ANTHROPIC_API_KEY=sk-ant-...
+VAULT_PATH=/absolute/path/to/vault
+```
 
-## 👥 Time
+## Testes e Eval
+```bash
+cd backend
+pytest                  # unitários
+pytest eval/            # golden dataset dos agentes
+jupyter notebook docs/math-models/
+```
 
-Projeto desenvolvido para a disciplina de **Interação Humano-Computador (IHC)**.
+## Decisões de Arquitetura
+
+| Data | Decisão | Motivo |
+|---|---|---|
+| 2025-05 | Zettelkasten como fonte de verdade dos agentes | Notas atômicas = chunks coesos para RAG; MOCs mapeiam domínios dos agentes |
+| 2025-05 | pgvector por user_id | Vault pessoal isolado por usuário sem banco separado |
+| 2025-05 | Busca híbrida (BM25 + dense + RRF) | Termos financeiros precisam de match léxico; conceitos precisam de semântica |
+| 2025-05 | Modelos matemáticos por agente | LLMs são ruins em otimização numérica; LP, FFT e Markowitz são determinísticos e auditáveis |
+| 2025-05 | Enterprise como módulo separado | Não contamina o MVP; reutiliza infra sem acoplamento |
+| 2025-05 | TimescaleDB para api_usage_events | Dados de custo são série temporal; hypertables aceleram queries sem mudar o SQL |
+| 2025-05 | ai_cost_tracker como decorator | Intercepta qualquer chamada LLM sem modificar a lógica dos agentes |
+
+## Time
 Felipe Murilo Ribeiro Ribeiro
 
----
-
-## 📄 Licença
-
-Este projeto está licenciado sob a [MIT License](LICENSE).
+## Licença
+[MIT License](LICENSE)
