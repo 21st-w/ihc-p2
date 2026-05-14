@@ -1,0 +1,106 @@
+:root {
+  /* surface — warm deep green-black */
+  --bg-0: #0A0E0C;
+  --bg-1: #101613;
+  --bg-2: #161E1A;
+  --bg-3: #1D2722;
+  --line: rgba(255, 255, 255, 0.06);
+  --line-2: rgba(255, 255, 255, 0.10);
+
+  /* ink */
+  --ink-0: #F4F1E8;
+  --ink-1: #D6D2C5;
+  --ink-2: #8E8C82;
+  --ink-3: #5A5A53;
+
+  /* brand */
+  --emerald-50: #E7F0EA;
+  --emerald-200: #9CC7AC;
+  --emerald-400: #3F9F70;
+  --emerald-500: #1F8A5B;
+  --emerald-600: #13683F;
+  --emerald-700: #0C4C2E;
+  --emerald-900: #0A2419;
+
+  --gold-50: #F5EEDD;
+  --gold-300: #E0C58A;
+  --gold-400: #C9A86A;
+  --gold-500: #A88947;
+
+  --rose-500: #C46A5A; /* alerts, discreet */
+
+  /* radii / shadow */
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 12px 32px -16px rgba(0, 0, 0, .5);
+  
+  /* z-index */
+  --z-base: 1;
+  --z-nav: 10;
+  --z-modal: 100;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  background: var(--bg-0);
+  color: var(--ink-0);
+  font-family: "Inter Tight", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul {
+  list-style: none;
+}
+
+.serif {
+  font-family: "Instrument Serif", "Times New Roman", serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+.mono {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Utilities */
+.text-center { text-align: center; }
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+.gap-2 { gap: 0.5rem; }
+.gap-4 { gap: 1rem; }
+.gap-6 { gap: 1.5rem; }
+
+/* Micro-animations */
+.hover-scale {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-scale:hover {
+  transform: scale(1.02);
+}
+.hover-scale:active {
+  transform: scale(0.98);
+}
