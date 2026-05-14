@@ -1,31 +1,30 @@
 """
-LangGraph Workflow Definition
-Conecta todos os nós (agentes) em um grafo de roteamento condicional.
+LangGraph Workflow Definition Dinâmico
+Conecta o Supervisor Agent no grafo lendo da Agent Factory.
 """
-# from langgraph.graph import StateGraph, END
+from langgraph.graph import StateGraph, END
 from app.agents.supervisor import AgentState, supervisor_node
-from app.agents.budget_advisor import budget_advisor_node
-from app.agents.investment_advisor import investment_advisor_node
-from app.agents.insights_agent import insights_node
-from app.agents.subscription_auditor import subscription_auditor_node
-from app.agents.categorization_agent import categorization_node
+from app.agents.factory import registry
 
-def create_fintrack_graph():
+def build_dynamic_graph():
     """
-    Cria e compila o grafo LangGraph.
-    O Supervisor decide para qual nó rotear com base no estado atual.
+    Cria e compila o grafo LangGraph dinamicamente no momento da chamada,
+    garantindo que se o Agent Factory instanciou um novo nó no tempo
+    de execução (on the fly), ele seja incluído no grafo.
     """
-    # graph = StateGraph(AgentState)
+    workflow = StateGraph(AgentState)
     
-    # graph.add_node("supervisor", supervisor_node)
-    # graph.add_node("budget_advisor", budget_advisor_node)
-    # graph.add_node("investment_advisor", investment_advisor_node)
-    # graph.add_node("insights_agent", insights_node)
-    # graph.add_node("subscription_auditor", subscription_auditor_node)
-    # graph.add_node("categorization_agent", categorization_node)
+    # Adiciona o nó supervisor (sempre fixo)
+    workflow.add_node("supervisor", supervisor_node)
+    workflow.set_entry_point("supervisor")
     
-    # graph.set_entry_point("supervisor")
-    # ... configuração de roteamento condicional ...
+    # Busca os nós isolados injetados dinamicamente no Registry
+    nodes = registry.get_all_nodes()
+    for name, node_func in nodes.items():
+        workflow.add_node(name, node_func)
     
-    # return graph.compile()
-    pass
+    # Roteamento (no MVP ele responde direto, mas a infra suporta nós novos)
+    workflow.add_edge("supervisor", END)
+    
+    # Compila o grafo
+    return workflow.compile()

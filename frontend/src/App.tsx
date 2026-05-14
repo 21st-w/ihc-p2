@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Routes, Route, Link, useLocation } from 'react-router-dom'
-import { LayoutDashboard, Receipt, User, Wallet, Bell, Menu, X, ArrowUpRight, ArrowDownRight } from 'lucide-react'
+import { LayoutDashboard, Receipt, User, Wallet, Bell, Menu, X, ArrowUpRight, ArrowDownRight, MessageCircle, Send } from 'lucide-react'
 import './App.css'
 
 function Layout({ children }: { children: React.ReactNode }) {
@@ -10,6 +10,7 @@ function Layout({ children }: { children: React.ReactNode }) {
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
     { name: 'Transações', path: '/transactions', icon: Receipt },
+    { name: 'Chat AI', path: '/chat', icon: MessageCircle },
     { name: 'Perfil', path: '/profile', icon: User },
   ]
 
@@ -79,6 +80,138 @@ function Layout({ children }: { children: React.ReactNode }) {
   )
 }
 
+function ChatInterface() {
+  const [messages, setMessages] = useState<{role: 'user' | 'ai', content: string}[]>([
+    { role: 'ai', content: 'Olá! Sou o Supervisor do seu Second Brain Financeiro. Como posso te ajudar hoje?' }
+  ])
+  const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages, loading])
+
+  const handleSend = async () => {
+    if (!input.trim()) return
+    
+    const userMsg = input.trim()
+    setInput('')
+    setMessages(prev => [...prev, { role: 'user', content: userMsg }])
+    
+    // Adiciona uma mensagem de IA vazia para ser preenchida via streaming
+    setMessages(prev => [...prev, { role: 'ai', content: '' }])
+    setLoading(true)
+
+    try {
+      const token = "mock_token"
+      const res = await fetch('http://localhost:8000/api/v1/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ message: userMsg })
+      })
+
+      if (!res.ok) throw new Error('Erro na API')
+      
+      const reader = res.body?.getReader()
+      const decoder = new TextDecoder()
+      
+      if (reader) {
+        setLoading(false) // Parar de mostrar "Pensando..." assim que a stream abrir
+        
+        while (true) {
+          const { value, done } = await reader.read()
+          if (done) break
+          
+          const chunkString = decoder.decode(value, { stream: true })
+          const lines = chunkString.split('\\n')
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const dataStr = line.slice(6)
+              if (dataStr === '[DONE]') break
+              
+              try {
+                const data = JSON.parse(dataStr)
+                if (data.chunk) {
+                  // Atualiza a última mensagem do array (a mensagem da IA)
+                  setMessages(prev => {
+                    const newMessages = [...prev]
+                    newMessages[newMessages.length - 1].content += data.chunk
+                    return newMessages
+                  })
+                }
+              } catch (e) {
+                // ignorar json parse err em pedaços quebrados
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      setMessages(prev => {
+        const newMessages = [...prev]
+        newMessages[newMessages.length - 1].content = 'Desculpe, ocorreu um erro de conexão.'
+        return newMessages
+      })
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="card chat-card" style={{ height: 'calc(100vh - 140px)', display: 'flex', flexDirection: 'column', padding: 0 }}>
+      <div className="chat-messages" style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {messages.map((msg, i) => (
+          <div key={i} style={{
+            alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
+            backgroundColor: msg.role === 'user' ? 'var(--blue-5)' : 'var(--ink-5)',
+            color: msg.role === 'user' ? 'white' : 'var(--ink-1)',
+            padding: '12px 16px',
+            borderRadius: '12px',
+            maxWidth: '80%',
+            lineHeight: 1.5,
+            borderBottomRightRadius: msg.role === 'user' ? 0 : '12px',
+            borderBottomLeftRadius: msg.role === 'ai' ? 0 : '12px',
+            boxShadow: 'var(--shadow-sm)'
+          }}>
+            {msg.content}
+          </div>
+        ))}
+        {loading && (
+          <div style={{ alignSelf: 'flex-start', backgroundColor: 'var(--ink-5)', padding: '12px 16px', borderRadius: '12px', color: 'var(--ink-3)' }}>
+            Pensando...
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+      <div className="chat-input-area" style={{ borderTop: '1px solid var(--ink-4)', padding: '16px', display: 'flex', gap: '12px', alignItems: 'center' }}>
+        <input 
+          type="text" 
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyPress={e => e.key === 'Enter' && handleSend()}
+          placeholder="Pergunte sobre seus gastos, orçamentos ou teses de investimento..." 
+          style={{ flex: 1, padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--ink-4)', fontSize: '1rem', outline: 'none' }}
+        />
+        <button 
+          onClick={handleSend}
+          disabled={loading || !input.trim()}
+          style={{ backgroundColor: 'var(--blue-5)', color: 'white', border: 'none', borderRadius: '8px', width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: loading ? 'not-allowed' : 'pointer' }}
+        >
+          <Send size={20} />
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function Dashboard() {
   return (
     <div className="dashboard-grid">
@@ -140,7 +273,7 @@ function Placeholder({ title }: { title: string }) {
     <div className="card placeholder-card">
       <h2>{title}</h2>
       <p style={{ marginTop: '12px', color: 'var(--ink-1)' }}>
-        Página em construção com práticas de IHC aplicadas. Interface adaptável para celulares e computadores.
+        Página em construção.
       </p>
     </div>
   )
@@ -152,6 +285,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/transactions" element={<Placeholder title="Transações" />} />
+        <Route path="/chat" element={<ChatInterface />} />
         <Route path="/profile" element={<Placeholder title="Meu Perfil" />} />
       </Routes>
     </Layout>

@@ -8,7 +8,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from app.core.config import settings
-from app.api.endpoints import auth, transactions
+from app.api.endpoints import chat
 
 logger = logging.getLogger(__name__)
 
@@ -40,8 +40,7 @@ app.add_middleware(
 )
 
 # Registra endpoints
-app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["auth"])
-app.include_router(transactions.router, prefix=f"{settings.API_V1_STR}/transactions", tags=["transactions"])
+app.include_router(chat.router, prefix=f"{settings.API_V1_STR}/chat", tags=["chat"])
 
 @app.get("/")
 @limiter.limit("5/minute")
