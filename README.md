@@ -95,8 +95,8 @@ O projeto combina LLMs com modelos deterministas quando fizer sentido:
 
 ```text
 frontend/
-  React + TypeScript + Vite
-  chat, dashboard, vault preview e fluxos de IHC
+  HTML + CSS + JavaScript
+  prototipo simples para chat, dashboard e fluxos de IHC
 
 backend/
   Python + FastAPI
@@ -216,9 +216,10 @@ Frontend:
 
 ```bash
 cd frontend
-npm install
-npm run dev
+python -m http.server 5173
 ```
+
+Depois acesse `http://localhost:5173`.
 
 Variaveis principais:
 
