@@ -138,9 +138,9 @@ function SimForm({ tipo, onSimulate }: { tipo: SimType; onSimulate: (p: any) => 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (tipo === "acoes") {
-      // Mock prices para converter cotas em valor
       const mockPrices: Record<string, number> = {
-        PETR4: 38.50, VALE3: 62.10, ITUB4: 32.40, WEGE3: 45.20, BBDC4: 13.80, B3SA3: 11.50
+        PETR4: 38.50, VALE3: 62.10, ITUB4: 32.40, WEGE3: 45.20, BBDC4: 13.80, B3SA3: 11.50,
+        BBAS3: 27.90, ELET3: 40.10, RENT3: 42.00, ABEV3: 12.30, B3SA3: 11.50
       };
       
       let valorInicialTotal = 0;
@@ -211,9 +211,22 @@ function SimForm({ tipo, onSimulate }: { tipo: SimType; onSimulate: (p: any) => 
               <div key={idx} className="flex gap-2 items-end p-2 bg-muted/20 rounded-md border border-border">
                 <div className="flex-1">
                   <label className="text-[10px] text-muted-foreground">Ticker</label>
-                  <Input className="h-8 text-xs bg-background" placeholder="PETR4" value={ativo.ticker} onChange={e => {
-                    const newA = [...ativos]; newA[idx].ticker = e.target.value.toUpperCase(); setAtivos(newA);
-                  }} />
+                  <select className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm"
+                    value={ativo.ticker} onChange={e => {
+                      const newA = [...ativos]; newA[idx].ticker = e.target.value; setAtivos(newA);
+                    }}>
+                    <option value="" disabled>Selecione</option>
+                    <option value="PETR4">PETR4 - Petrobras</option>
+                    <option value="VALE3">VALE3 - Vale</option>
+                    <option value="ITUB4">ITUB4 - Itaú Unibanco</option>
+                    <option value="WEGE3">WEGE3 - WEG</option>
+                    <option value="BBDC4">BBDC4 - Bradesco</option>
+                    <option value="B3SA3">B3SA3 - B3</option>
+                    <option value="BBAS3">BBAS3 - Banco do Brasil</option>
+                    <option value="ELET3">ELET3 - Eletrobras</option>
+                    <option value="RENT3">RENT3 - Localiza</option>
+                    <option value="ABEV3">ABEV3 - Ambev</option>
+                  </select>
                 </div>
                 <div className="w-20">
                   <label className="text-[10px] text-muted-foreground">Entrada</label>

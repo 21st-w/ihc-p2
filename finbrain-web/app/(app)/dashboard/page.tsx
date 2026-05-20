@@ -41,7 +41,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-in">
         <div>
-          <h1 className="text-2xl font-bold">Olá, {mockUser.nome} 👋</h1>
+          <h1 suppressHydrationWarning className="text-2xl font-bold">Olá, {mockUser.nome} 👋</h1>
           <p className="text-sm text-muted-foreground capitalize">{dateStr}</p>
         </div>
         <Button variant="outline" size="sm" className="gap-2 self-start">
@@ -69,7 +69,7 @@ export default function DashboardPage() {
                   <span className="text-sm text-muted-foreground">Renda mensal</span>
                   <DollarSign className="w-4 h-4 text-emerald-400" />
                 </div>
-                <p className="text-2xl font-bold text-emerald-400">
+                <p suppressHydrationWarning className="text-2xl font-bold text-emerald-400">
                   R$ {rendaMensal.toLocaleString("pt-BR")}
                 </p>
               </CardContent>
@@ -81,11 +81,11 @@ export default function DashboardPage() {
                   <span className="text-sm text-muted-foreground">Gastos do mês</span>
                   <TrendingDown className="w-4 h-4 text-red-400" />
                 </div>
-                <p className="text-2xl font-bold">
+                <p suppressHydrationWarning className="text-2xl font-bold">
                   R$ {gastosMes.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {((gastosMes / rendaMensal) * 100).toFixed(0)}% da renda
+                <p suppressHydrationWarning className="text-xs text-muted-foreground mt-1">
+                  {((gastosMes / (rendaMensal || 1)) * 100).toFixed(0)}% da renda
                 </p>
               </CardContent>
             </Card>
@@ -96,7 +96,7 @@ export default function DashboardPage() {
                   <span className="text-sm text-muted-foreground">Sobra projetada</span>
                   <TrendingUp className="w-4 h-4 text-indigo-400" />
                 </div>
-                <p className="text-2xl font-bold text-indigo-400">
+                <p suppressHydrationWarning className="text-2xl font-bold text-indigo-400">
                   R$ {sobra.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                 </p>
               </CardContent>
@@ -109,7 +109,7 @@ export default function DashboardPage() {
                   <Activity className="w-4 h-4 text-yellow-400" />
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <span className={`text-2xl font-bold ${scoreColor}`}>{score}</span>
+                  <span suppressHydrationWarning className={`text-2xl font-bold ${scoreColor}`}>{score}</span>
                   <span className="text-sm text-muted-foreground">/ 100</span>
                   <Badge variant="secondary" className="ml-auto text-xs">{mockDiagnostico.score.nivel}</Badge>
                 </div>
