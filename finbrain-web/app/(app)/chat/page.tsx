@@ -88,20 +88,72 @@ export default function ChatPage() {
     setInput("");
     setIsTyping(true);
 
-    // Simulate response delay
-    await new Promise(r => setTimeout(r, 1200));
-
-    const resp = findMockResponse(input);
+    const agentMsgId = (Date.now() + 1).toString();
     const agentMsg: Message = {
-      id: (Date.now() + 1).toString(),
+      id: agentMsgId,
       role: "agent",
-      content: resp.content,
-      agent: resp.agent,
-      skill: resp.skill,
-      blocked: resp.blocked,
+      content: "",
+      agent: "sistema",
     };
+    
     setMessages(prev => [...prev, agentMsg]);
-    setIsTyping(false);
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mensagem: userMsg.content }),
+      });
+
+      if (!res.body) throw new Error("No response body");
+
+      setIsTyping(false); 
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      let done = false;
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        buffer += decoder.decode(value, { stream: true });
+        
+        const lines = buffer.split("\n\n");
+        buffer = lines.pop() || ""; // Keep the incomplete line in the buffer
+        
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const dataStr = line.replace("data: ", "");
+            if (!dataStr.trim()) continue;
+            try {
+              const data = JSON.parse(dataStr);
+              if (data.type === "meta") {
+                setMessages(prev => prev.map(m => 
+                  m.id === agentMsgId 
+                    ? { ...m, agent: data.agente_usado, skill: data.skill_chamada } 
+                    : m
+                ));
+              } else if (data.type === "chunk") {
+                setMessages(prev => prev.map(m => 
+                  m.id === agentMsgId 
+                    ? { ...m, content: m.content + data.content } 
+                    : m
+                ));
+              }
+            } catch(e) {
+              console.error("SSE parse error", e, dataStr);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      setMessages(prev => prev.map(m => 
+        m.id === agentMsgId 
+          ? { ...m, content: m.content + "\n\n[Erro na comunicação com servidor.]" } 
+          : m
+      ));
+      setIsTyping(false);
+    }
   };
 
   return (
@@ -115,7 +167,7 @@ export default function ChatPage() {
             </div>
             <h2 className="text-xl font-semibold mb-2">Como posso ajudar?</h2>
             <p className="text-sm text-muted-foreground mb-6 max-w-md">
-              Converse com os agentes do FinBrain sobre sua vida financeira.
+              Converse com os agentes do Tio Patinhas sobre sua vida financeira.
               Tudo aqui é educacional — nunca recomendamos ativos.
             </p>
             <div className="flex flex-wrap gap-2 justify-center max-w-lg">

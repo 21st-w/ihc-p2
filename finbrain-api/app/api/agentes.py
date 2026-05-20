@@ -1,4 +1,4 @@
-"""FinBrain — API routes for agents (Sherlock, Benjamin, Yuyu) and unified chat."""
+"""Tio Patinhas — API routes for agents (Sherlock, Benjamin, Yuyu) and unified chat."""
 
 import json
 from fastapi import APIRouter, Depends, HTTPException
@@ -8,8 +8,9 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.security import get_current_user_id
-from app.agents import sherlock, benjamin
-from app.agents.yuyu import get_indicadores_sync, get_indicadores_mock
+from app.agents.sherlock import agent as sherlock
+from app.agents.benjamin import agent as benjamin
+from app.agents.yuyu.agent import get_indicadores_sync, get_indicadores_mock
 from app.guardrails.athena import validar
 from app.models.models import AgentLog, Simulation
 from app.schemas.schemas import ChatRequest, ChatResponse, SimulationResponse
@@ -102,13 +103,15 @@ Exemplos de params:
 Extraia parâmetros numéricos da mensagem quando possível."""
 
 
-@router.post("/chat", response_model=ChatResponse)
-def chat(
+from app.guardrails.athena import validar, validar_stream
+
+@router.post("/chat")
+async def chat(
     body: ChatRequest,
     user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db),
 ):
-    """Unified chat endpoint — routes to the appropriate agent."""
+    """Unified chat endpoint — routes to the appropriate agent using SSE."""
     client = _get_anthropic_client()
     mensagem = body.mensagem
 
@@ -117,75 +120,88 @@ def chat(
     intencao = intent.get("intencao", "pergunta_educacional")
     params = intent.get("params", {})
 
-    # Step 2: Route to agent
-    agente = "sistema"
-    skill_chamada = None
-    resposta = ""
-
-    if intencao == "diagnostico":
-        agente = "sherlock"
-        result = sherlock.analisar(db, user_id, anthropic_client=client)
-        resposta = result.get("narrativa", "Não foi possível gerar diagnóstico.")
-        skill_chamada = "diagnostico_gastos + score_saude"
-
-    elif intencao.startswith("simulacao_"):
-        agente = "benjamin"
-        tipo_map = {
-            "simulacao_juros": "juros_compostos",
-            "simulacao_reserva": "reserva_emergencia",
-            "simulacao_comparar": "comparar_rentabilidade",
-        }
-        tipo = tipo_map.get(intencao, "juros_compostos")
-        result = benjamin.simular(tipo, params, anthropic_client=client)
-        resposta = result.get("explicacao", "Simulação concluída.")
-        skill_chamada = tipo
-
-        if "erro" not in result:
-            sim = Simulation(
-                user_id=user_id, tipo=f"chat_{tipo}",
-                inputs_json=params, outputs_json=result,
-            )
-            db.add(sim)
-
-    elif intencao == "pergunta_educacional":
-        agente = "educacional"
-        resposta = _answer_educational(mensagem, client)
-
-    else:
+    async def chat_stream():
         agente = "sistema"
-        resposta = (
-            "Desculpe, só posso ajudar com questões financeiras educacionais. "
-            "Tente perguntar sobre reserva de emergência, juros compostos ou "
-            "conceitos de investimento!"
+        skill_chamada = None
+        base_generator = None
+
+        if intencao == "diagnostico":
+            agente = "sherlock"
+            skill_chamada = "diagnostico_gastos + score_saude"
+            result, base_generator = sherlock.analisar(db, user_id, anthropic_client=client, stream=True)
+
+        elif intencao.startswith("simulacao_"):
+            agente = "benjamin"
+            tipo_map = {
+                "simulacao_juros": "juros_compostos",
+                "simulacao_reserva": "reserva_emergencia",
+                "simulacao_comparar": "comparar_rentabilidade",
+                "simulacao_acoes": "simulacao_acoes",
+            }
+            tipo = tipo_map.get(intencao, "juros_compostos")
+            skill_chamada = tipo
+            result, base_generator = benjamin.simular(tipo, params, anthropic_client=client, stream=True)
+
+            if "erro" not in result:
+                sim = Simulation(
+                    user_id=user_id, tipo=f"chat_{tipo}",
+                    inputs_json=params, outputs_json=result,
+                )
+                db.add(sim)
+                db.commit()
+
+        elif intencao == "pergunta_educacional":
+            agente = "educacional"
+            async def edu_gen():
+                yield _answer_educational(mensagem, client)
+            base_generator = edu_gen()
+
+        else:
+            agente = "sistema"
+            async def sys_gen():
+                yield (
+                    "Desculpe, só posso ajudar com questões financeiras educacionais. "
+                    "Tente perguntar sobre reserva de emergência, juros compostos ou "
+                    "conceitos de investimento!"
+                )
+            base_generator = sys_gen()
+
+        try:
+            indicators = get_indicadores_sync()
+            indicadores = {"selic": indicators.selic, "ipca_12m": indicators.ipca_12m, "dolar": indicators.dolar}
+        except Exception:
+            indicadores = None
+
+        meta = {
+            "type": "meta",
+            "agente_usado": agente,
+            "skill_chamada": skill_chamada,
+            "indicadores": indicadores
+        }
+        yield f"data: {json.dumps(meta)}\n\n"
+
+        texto_final = ""
+        # Pass base_generator through Athena's guardrail
+        allow_tk = (agente == "benjamin" and skill_chamada == "simulacao_acoes")
+        async for chunk in validar_stream(base_generator, allow_tickers=allow_tk):
+            chunk_data = {"type": "chunk", "content": chunk}
+            texto_final += chunk
+            yield f"data: {json.dumps(chunk_data)}\n\n"
+
+        done_data = {"type": "done"}
+        yield f"data: {json.dumps(done_data)}\n\n"
+
+        log = AgentLog(
+            user_id=user_id,
+            agente=agente,
+            input_text=mensagem,
+            output_text=texto_final,
+            guardrail_ok=True,
         )
+        db.add(log)
+        db.commit()
 
-    # Step 3: Guardrails
-    athena = validar(resposta)
-
-    # Step 4: Get indicators
-    try:
-        indicators = get_indicadores_sync()
-        indicadores = {"selic": indicators.selic, "ipca_12m": indicators.ipca_12m, "dolar": indicators.dolar}
-    except Exception:
-        indicadores = None
-
-    # Step 5: Log
-    log = AgentLog(
-        user_id=user_id,
-        agente=agente,
-        input_text=mensagem,
-        output_text=athena.texto_final,
-        guardrail_ok=athena.ok,
-    )
-    db.add(log)
-    db.commit()
-
-    return ChatResponse(
-        resposta=athena.texto_final,
-        agente_usado=agente,
-        skill_chamada=skill_chamada,
-        indicadores=indicadores,
-    )
+    return StreamingResponse(chat_stream(), media_type="text/event-stream")
 
 
 # ---------------------------------------------------------------------------
@@ -277,7 +293,7 @@ def _answer_educational(message: str, client) -> str:
                 model="claude-sonnet-4-20250514",
                 max_tokens=600,
                 system=(
-                    "Você é um educador financeiro do FinBrain. Responda de forma clara e didática. "
+                    "Você é um educador financeiro do Tio Patinhas. Responda de forma clara e didática. "
                     "NUNCA recomende ativos específicos. NUNCA diga para comprar ou vender. "
                     "Cite fontes oficiais quando relevante (BCB, CVM, Anbima). "
                     "Máximo 250 palavras."
