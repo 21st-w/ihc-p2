@@ -1,4 +1,4 @@
-"""FinBrain — Sherlock: agente de diagnóstico de perfil financeiro.
+"""Tio Patinhas — Sherlock: agente de diagnóstico de perfil financeiro.
 
 Carrega transações, chama skills determinísticas, usa LLM para narrar diagnóstico.
 """
@@ -13,7 +13,7 @@ from app.skills.calculos import diagnostico_gastos, score_saude
 from app.guardrails.athena import validar
 
 
-SHERLOCK_SYSTEM_PROMPT = """Você é Sherlock, especialista em perfil financeiro do FinBrain.
+SHERLOCK_SYSTEM_PROMPT = """Você é Sherlock, especialista em perfil financeiro do Tio Patinhas.
 Analise os dados abaixo e gere um diagnóstico honesto em 4 blocos:
 1. **Situação Atual** — resumo objetivo dos números.
 2. **Pontos Fortes** — o que o usuário está fazendo bem.
@@ -63,16 +63,17 @@ def _load_user_context(db: Session, user_id: int) -> dict:
     }
 
 
-def analisar(db: Session, user_id: int, anthropic_client=None) -> dict:
+def analisar(db: Session, user_id: int, anthropic_client=None, stream: bool = False):
     """Run Sherlock analysis: deterministic skills + LLM narrative.
 
     Args:
         db: Database session.
         user_id: User ID to analyze.
         anthropic_client: Optional Anthropic client (None = skip LLM, return data only).
+        stream: If True, returns a tuple of (result_dict, narrative_generator).
 
     Returns:
-        Dict with diagnostico data and optional LLM narrative.
+        Dict with diagnostico data and optional LLM narrative, or (dict, generator) if stream=True.
     """
     ctx = _load_user_context(db, user_id)
 
@@ -100,7 +101,7 @@ def analisar(db: Session, user_id: int, anthropic_client=None) -> dict:
         },
     }
 
-    # LLM narrative (optional — skip if no client)
+    # LLM narrative
     if anthropic_client:
         user_data = (
             f"Renda mensal: R$ {ctx['renda_mensal']}\n"
@@ -113,25 +114,52 @@ def analisar(db: Session, user_id: int, anthropic_client=None) -> dict:
             f"Dívidas: {ctx['dividas']}\n"
             f"Assinaturas detectadas: {diag['assinaturas_detectadas']}\n"
         )
-        try:
-            response = anthropic_client.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=800,
-                system=SHERLOCK_SYSTEM_PROMPT,
-                messages=[{"role": "user", "content": user_data}],
+        if stream:
+            def stream_generator():
+                with anthropic_client.messages.stream(
+                    model="claude-sonnet-4-20250514",
+                    max_tokens=800,
+                    system=SHERLOCK_SYSTEM_PROMPT,
+                    messages=[{"role": "user", "content": user_data}],
+                ) as s:
+                    for text in s.text_stream:
+                        yield text
+            
+            # Save simulation immediately for stream (without final narrative)
+            sim = Simulation(
+                user_id=user_id, tipo="diagnostico_sherlock",
+                inputs_json={"periodo": "90d"}, outputs_json=result,
             )
-            narrative = response.content[0].text
-            athena_result = validar(narrative)
-            result["narrativa"] = athena_result.texto_final
-            result["guardrail_ok"] = athena_result.ok
-            result["bloqueios"] = athena_result.bloqueios
-        except Exception as e:
-            result["narrativa"] = f"Erro ao gerar diagnóstico narrativo: {str(e)}"
-            result["guardrail_ok"] = True
-            result["bloqueios"] = []
+            db.add(sim)
+            db.commit()
+            
+            return result, stream_generator()
+        else:
+            try:
+                response = anthropic_client.messages.create(
+                    model="claude-sonnet-4-20250514",
+                    max_tokens=800,
+                    system=SHERLOCK_SYSTEM_PROMPT,
+                    messages=[{"role": "user", "content": user_data}],
+                )
+                narrative = response.content[0].text
+                athena_result = validar(narrative)
+                result["narrativa"] = athena_result.texto_final
+                result["guardrail_ok"] = athena_result.ok
+                result["bloqueios"] = athena_result.bloqueios
+            except Exception as e:
+                result["narrativa"] = f"Erro ao gerar diagnóstico narrativo: {str(e)}"
+                result["guardrail_ok"] = True
+                result["bloqueios"] = []
     else:
-        # Fallback: generate a simple narrative from data
-        result["narrativa"] = _generate_fallback_narrative(diag, health, ctx)
+        # Fallback
+        fallback = _generate_fallback_narrative(diag, health, ctx)
+        if stream:
+            async def fallback_stream():
+                yield fallback
+            return result, fallback_stream()
+            
+        result["narrativa"] = fallback
         result["guardrail_ok"] = True
         result["bloqueios"] = []
 

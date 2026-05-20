@@ -1,4 +1,4 @@
-"""FinBrain — Athena: sistema de guardrails em 2 camadas.
+"""Tio Patinhas — Athena: sistema de guardrails em 2 camadas.
 
 Camada 1: regex/keyword (determinístico, instantâneo).
 Camada 2: disclaimer injection (obrigatório, não desabilitável).
@@ -69,7 +69,7 @@ def _sanitize(text: str, blocked: list[str]) -> str:
     return result
 
 
-def validar(texto: str) -> AthenaResult:
+def validar(texto: str, allow_tickers: bool = False) -> AthenaResult:
     """Valida uma resposta de agente através das camadas de guardrail.
 
     Camada 1: Bloqueia frases proibidas e tickers.
@@ -89,9 +89,11 @@ def validar(texto: str) -> AthenaResult:
         bloqueios.extend([f"Frase bloqueada: '{p}'" for p in phrases_found])
 
     # Camada 1 — Tickers
-    tickers_found = _check_tickers(texto)
-    if tickers_found:
-        bloqueios.extend([f"Ticker bloqueado: {t}" for t in tickers_found])
+    tickers_found = []
+    if not allow_tickers:
+        tickers_found = _check_tickers(texto)
+        if tickers_found:
+            bloqueios.extend([f"Ticker bloqueado: {t}" for t in tickers_found])
 
     # Sanitize if needed
     all_blocked = phrases_found + tickers_found
@@ -106,3 +108,27 @@ def validar(texto: str) -> AthenaResult:
 
     ok = len(bloqueios) == 0
     return AthenaResult(texto_final=texto_limpo, bloqueios=bloqueios, ok=ok)
+
+
+async def validar_stream(generator, allow_tickers: bool = False):
+    """Valida uma resposta de agente que está sendo gerada em streaming.
+    
+    Aplica a sanitização por chunk e injeta o disclaimer obrigatório no final.
+    """
+    full_text = ""
+    try:
+        if hasattr(generator, "__aiter__"):
+            async for chunk in generator:
+                sanitized_chunk = _sanitize(chunk, BLOCKED_PHRASES)
+                full_text += sanitized_chunk
+                yield sanitized_chunk
+        else:
+            for chunk in generator:
+                sanitized_chunk = _sanitize(chunk, BLOCKED_PHRASES)
+                full_text += sanitized_chunk
+                yield sanitized_chunk
+    except Exception as e:
+        yield f"\n\n[Erro na geração: {str(e)}]"
+
+    if DISCLAIMER.strip() not in full_text:
+        yield DISCLAIMER
