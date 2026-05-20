@@ -7,14 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { TrendingUp, Shield, Scale, ArrowRight } from "lucide-react";
+import { TrendingUp, Shield, Scale, ArrowRight, LineChart as ChartIcon } from "lucide-react";
 
-type SimType = "juros" | "reserva" | "comparar";
+type SimType = "juros" | "reserva" | "comparar" | "acoes";
 
 const SIM_CARDS: { type: SimType; icon: React.ReactNode; title: string; desc: string }[] = [
   { type: "juros", icon: <TrendingUp className="w-6 h-6" />, title: "Juros Compostos", desc: "Simule o crescimento do patrimônio" },
   { type: "reserva", icon: <Shield className="w-6 h-6" />, title: "Reserva de Emergência", desc: "Calcule quanto precisa guardar" },
   { type: "comparar", icon: <Scale className="w-6 h-6" />, title: "Comparar Rentabilidade", desc: "Poupança vs CDB vs Tesouro Selic" },
+  { type: "acoes", icon: <ChartIcon className="w-6 h-6" />, title: "Carteira de Ações", desc: "Simule rentabilidade de múltiplos ativos" },
 ];
 
 export default function SimulacoesPage() {
@@ -52,6 +53,26 @@ export default function SimulacoesPage() {
         valor_alvo: alvo.toFixed(2),
         meses_para_atingir: ap > 0 ? Math.ceil(alvo / ap) : null,
         gastos_base: gastos.toFixed(2),
+      });
+    } else if (tipo === "acoes") {
+      const pv = parseFloat(params.valor_inicial || "1000");
+      const aporte = parseFloat(params.aporte_mensal || "0");
+      const meses = parseInt(params.meses || "12");
+      const r_anual = 0.15; // mock media
+      const taxa_mensal = Math.pow(1 + r_anual, 1/12) - 1;
+      let saldo = pv;
+      let totalInv = pv;
+      const evolucao = [{ mes: 0, saldo }];
+      for (let i = 1; i <= meses; i++) {
+        saldo = saldo * (1 + taxa_mensal) + aporte;
+        totalInv += aporte;
+        evolucao.push({ mes: i, saldo: Math.round(saldo * 100) / 100 });
+      }
+      setResult({
+        tipo: "acoes",
+        valor_final: saldo.toFixed(2),
+        retorno_projetado: (r_anual * 100).toFixed(0),
+        evolucao,
       });
     } else {
       setResult({
@@ -106,12 +127,54 @@ export default function SimulacoesPage() {
   );
 }
 
+import { Plus, X } from "lucide-react";
+
 function SimForm({ tipo, onSimulate }: { tipo: SimType; onSimulate: (p: any) => void }) {
   const [params, setParams] = useState<any>({});
+  const [ativos, setAtivos] = useState([{ ticker: "", tipo: "valor", montante: "" }]);
+  
   const set = (k: string, v: string) => setParams((p: any) => ({ ...p, [k]: v }));
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (tipo === "acoes") {
+      // Mock prices para converter cotas em valor
+      const mockPrices: Record<string, number> = {
+        PETR4: 38.50, VALE3: 62.10, ITUB4: 32.40, WEGE3: 45.20, BBDC4: 13.80, B3SA3: 11.50
+      };
+      
+      let valorInicialTotal = 0;
+      const calcAtivos = ativos.map(a => {
+        const t = a.ticker.toUpperCase();
+        const num = parseFloat(a.montante || "0");
+        let val = 0;
+        if (a.tipo === "cotas") {
+          const price = mockPrices[t] || 20.00; // default 20
+          val = num * price;
+        } else {
+          val = num;
+        }
+        valorInicialTotal += val;
+        return { ticker: t, valor: val };
+      });
+      
+      const tickers_pesos = calcAtivos.map(a => ({
+        ticker: a.ticker,
+        peso: valorInicialTotal > 0 ? (a.valor / valorInicialTotal) : 0
+      }));
+
+      onSimulate({
+        ...params,
+        valor_inicial: valorInicialTotal.toString(),
+        tickers_pesos
+      });
+    } else {
+      onSimulate(params);
+    }
+  };
+
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSimulate(params); }} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       {tipo === "juros" && (
         <>
           <div><label className="text-xs text-muted-foreground">Valor inicial (R$)</label><Input type="number" value={params.valor_inicial || ""} onChange={e => set("valor_inicial", e.target.value)} placeholder="1000" className="bg-muted/30 mt-1" /></div>
@@ -132,6 +195,53 @@ function SimForm({ tipo, onSimulate }: { tipo: SimType; onSimulate: (p: any) => 
           <div><label className="text-xs text-muted-foreground">Valor inicial (R$)</label><Input type="number" value={params.valor_inicial || ""} onChange={e => set("valor_inicial", e.target.value)} placeholder="1000" className="bg-muted/30 mt-1" /></div>
           <div><label className="text-xs text-muted-foreground">Aporte mensal (R$)</label><Input type="number" value={params.aporte_mensal || ""} onChange={e => set("aporte_mensal", e.target.value)} placeholder="500" className="bg-muted/30 mt-1" /></div>
           <div><label className="text-xs text-muted-foreground">Meses</label><Input type="number" value={params.meses || ""} onChange={e => set("meses", e.target.value)} placeholder="12" className="bg-muted/30 mt-1" /></div>
+        </>
+      )}
+      {tipo === "acoes" && (
+        <>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <label className="text-sm font-semibold">Meus Ativos</label>
+              <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => setAtivos([...ativos, { ticker: "", tipo: "valor", montante: "" }])}>
+                <Plus className="w-3 h-3 mr-1" /> Adicionar
+              </Button>
+            </div>
+            
+            {ativos.map((ativo, idx) => (
+              <div key={idx} className="flex gap-2 items-end p-2 bg-muted/20 rounded-md border border-border">
+                <div className="flex-1">
+                  <label className="text-[10px] text-muted-foreground">Ticker</label>
+                  <Input className="h-8 text-xs bg-background" placeholder="PETR4" value={ativo.ticker} onChange={e => {
+                    const newA = [...ativos]; newA[idx].ticker = e.target.value.toUpperCase(); setAtivos(newA);
+                  }} />
+                </div>
+                <div className="w-20">
+                  <label className="text-[10px] text-muted-foreground">Entrada</label>
+                  <select className="flex h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm"
+                    value={ativo.tipo} onChange={e => {
+                      const newA = [...ativos]; newA[idx].tipo = e.target.value; setAtivos(newA);
+                    }}>
+                    <option value="valor">R$</option>
+                    <option value="cotas">Cotas</option>
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <label className="text-[10px] text-muted-foreground">{ativo.tipo === "valor" ? "Valor (R$)" : "Qtd Cotas"}</label>
+                  <Input type="number" className="h-8 text-xs bg-background" placeholder={ativo.tipo === "valor" ? "1000" : "100"} value={ativo.montante} onChange={e => {
+                    const newA = [...ativos]; newA[idx].montante = e.target.value; setAtivos(newA);
+                  }} />
+                </div>
+                {ativos.length > 1 && (
+                  <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                    onClick={() => setAtivos(ativos.filter((_, i) => i !== idx))}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+          <div><label className="text-xs text-muted-foreground">Aporte mensal total (R$)</label><Input type="number" value={params.aporte_mensal || ""} onChange={e => set("aporte_mensal", e.target.value)} placeholder="200" className="bg-muted/30 mt-1" /></div>
+          <div><label className="text-xs text-muted-foreground">Prazo (Meses)</label><Input type="number" value={params.meses || ""} onChange={e => set("meses", e.target.value)} placeholder="24" className="bg-muted/30 mt-1" /></div>
         </>
       )}
       <Button type="submit" className="w-full">Simular</Button>
@@ -182,6 +292,25 @@ function SimResult({ result }: { result: any }) {
             <div className="flex justify-between"><span className="text-muted-foreground">CDB 100% CDI</span><span className="font-mono text-emerald-400">R$ {result.cdb}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Tesouro Selic</span><span className="font-mono text-primary">R$ {result.tesouro}</span></div>
           </div>
+        )}
+        {result.tipo === "acoes" && (
+          <>
+            <div className="grid grid-cols-2 gap-2 text-center mb-4">
+              <div><p className="text-xs text-muted-foreground">Valor final</p><p className="text-lg font-bold text-emerald-400">R$ {parseFloat(result.valor_final).toLocaleString("pt-BR")}</p></div>
+              <div><p className="text-xs text-muted-foreground">Retorno médio a.a.</p><p className="text-lg font-bold text-primary">{result.retorno_projetado}%</p></div>
+            </div>
+            {result.evolucao && (
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={result.evolucao}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                  <XAxis dataKey="mes" tick={{ fill: "#94A3B8", fontSize: 10 }} />
+                  <YAxis tick={{ fill: "#94A3B8", fontSize: 10 }} />
+                  <Tooltip contentStyle={{ backgroundColor: "#13131A", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", fontSize: 11 }} />
+                  <Line type="monotone" dataKey="saldo" stroke="#F59E0B" strokeWidth={2} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </>
         )}
         <p className="text-[10px] text-muted-foreground pt-2 border-t border-border">
           ⚠️ Simulação educacional. Não é recomendação de investimento. Performance passada não garante resultados futuros.

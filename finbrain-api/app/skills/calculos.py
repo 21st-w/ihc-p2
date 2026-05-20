@@ -1,4 +1,4 @@
-"""FinBrain — Funções financeiras determinísticas.
+"""Tio Patinhas — Funções financeiras determinísticas.
 
 Todas as funções são puras (sem I/O, sem LLM), usam Decimal para precisão
 monetária e possuem docstrings com fórmula, premissas e exemplo.
@@ -182,3 +182,60 @@ def comparar_rentabilidade(
         "tesouro_selic": {"valor_final_liquido": _round(r_tes["valor_final"] - ir_tes), "ir": _round(ir_tes), "aliquota": str(aliq)},
         "premissas": {"selic_anual": str(selic_anual), "meses": meses},
     }
+
+
+def simular_carteira_acoes(
+    valor_inicial: Decimal,
+    aporte_mensal: Decimal,
+    meses: int,
+    tickers_pesos: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Simula uma carteira de ações. Usa premissas educacionais baseadas nos pesos.
+    tickers_pesos = [{"ticker": "PETR4", "peso": 0.4}, {"ticker": "VALE3", "peso": 0.6}]
+    """
+    if meses <= 0:
+        raise ValueError("Meses deve ser positivo")
+    if not tickers_pesos:
+        raise ValueError("Ao menos um ticker deve ser informado")
+        
+    # Mock de retornos anuais educacionais (apenas para a simulação)
+    # Na vida real isso buscaria de uma API como YFinance
+    historico_mock = {
+        "PETR4": Decimal("0.18"),
+        "VALE3": Decimal("0.12"),
+        "ITUB4": Decimal("0.15"),
+        "WEGE3": Decimal("0.25"),
+        "BBDC4": Decimal("0.08"),
+        "B3SA3": Decimal("0.10"),
+    }
+    
+    retorno_carteira_anual = Decimal("0")
+    for t in tickers_pesos:
+        ticker = str(t["ticker"]).upper()
+        peso = Decimal(str(t["peso"]))
+        # Se não tiver o ticker no mock, assume 10% a.a
+        retorno = historico_mock.get(ticker, Decimal("0.10"))
+        retorno_carteira_anual += retorno * peso
+        
+    # Converte retorno anual esperado da carteira para mensal
+    taxa_mensal = (Decimal("1") + retorno_carteira_anual) ** (Decimal("1") / Decimal("12")) - Decimal("1")
+    
+    saldo = valor_inicial
+    total_investido = valor_inicial
+    evolucao = [{"mes": 0, "saldo": _round(saldo)}]
+    for mes in range(1, meses + 1):
+        saldo = saldo * (Decimal("1") + taxa_mensal) + aporte_mensal
+        total_investido += aporte_mensal
+        evolucao.append({"mes": mes, "saldo": _round(saldo)})
+        
+    total_lucro = saldo - total_investido
+    
+    return {
+        "valor_final": _round(saldo),
+        "total_investido": _round(total_investido),
+        "total_lucro": _round(total_lucro),
+        "retorno_anual_projetado": _round(retorno_carteira_anual * Decimal("100")),
+        "evolucao": evolucao,
+        "premissas": "Simulação baseada em retornos históricos médios fictícios. Não é garantia de rentabilidade futura."
+    }
+
