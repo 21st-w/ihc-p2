@@ -13,7 +13,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
 } from "recharts";
-import { mockUser, mockIndicadores, mockDiagnostico, mockGastosPorCategoria } from "@/lib/mock";
+import { mockUser, mockIndicadores, mockDiagnostico, mockGastosPorCategoria, mockIncome } from "@/lib/mock";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
@@ -25,8 +25,8 @@ export default function DashboardPage() {
     return () => clearTimeout(timer);
   }, []);
 
-  const rendaMensal = 15000;
-  const gastosMes = 4102.30;
+  const rendaMensal = mockIncome.reduce((acc: number, item: any) => acc + item.valor_mensal, 0);
+  const gastosMes = mockDiagnostico.diagnostico.total_debitos;
   const sobra = rendaMensal - gastosMes;
   const score = mockDiagnostico.score.score;
 

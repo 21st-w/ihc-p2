@@ -7,6 +7,7 @@ import {
   MessageCircle, User, Settings, Brain, X, Menu,
 } from "lucide-react";
 import { useState } from "react";
+import { mockUser } from "@/lib/mock";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -85,7 +86,7 @@ export function Sidebar() {
           })}
         </nav>
 
-        {/* Footer with Profile Switcher */}
+        {/* Profile Switcher */}
         <div className="px-4 py-4 border-t border-sidebar-border space-y-4">
           <div className="flex items-center justify-between px-2">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Trocar Perfil</span>
@@ -112,6 +113,19 @@ export function Sidebar() {
               <div className="w-2 h-2 rounded-full bg-yellow-400"></div>
               Salário Mínimo
             </button>
+          </div>
+        </div>
+
+        {/* Footer (User Info) */}
+        <div className="px-4 py-4 border-t border-sidebar-border bg-sidebar-accent/30">
+          <div className="flex items-center gap-3 px-2">
+            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-semibold text-primary">
+              {mockUser?.nome?.charAt(0) || "U"}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground truncate">{mockUser?.nome || "Usuário"}</p>
+              <p className="text-xs text-muted-foreground truncate">{mockUser?.email || "email@finbrain.app"}</p>
+            </div>
           </div>
         </div>
       </aside>
