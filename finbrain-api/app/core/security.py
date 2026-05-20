@@ -1,4 +1,4 @@
-"""FinBrain API — JWT authentication utilities."""
+"""Tio Patinhas API — JWT authentication utilities."""
 
 from datetime import datetime, timedelta, timezone
 

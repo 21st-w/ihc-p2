@@ -1,4 +1,4 @@
-# FinBrain
+# Tio Patinhas
 
 > Laboratório financeiro pessoal com IA: organiza seus gastos, mede sua saúde financeira e simula cenários educacionais — sem recomendar investimentos.
 
@@ -6,7 +6,7 @@
 
 ## Visão do produto
 
-O FinBrain ajuda profissionais brasileiros de classe média-alta a entender e melhorar sua vida financeira usando:
+O Tio Patinhas ajuda profissionais brasileiros de classe média-alta a entender e melhorar sua vida financeira usando:
 
 - cadastro de renda, gastos, assinaturas e dívidas;
 - diagnóstico em linguagem natural via agente **Sherlock**;

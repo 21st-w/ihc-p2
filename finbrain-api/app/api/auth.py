@@ -1,4 +1,4 @@
-"""FinBrain — Auth API routes."""
+"""Tio Patinhas — Auth API routes."""
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session

@@ -1,4 +1,4 @@
-"""FinBrain — Income Sources and Debts API routes."""
+"""Tio Patinhas — Income Sources and Debts API routes."""
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session

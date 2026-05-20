@@ -1,4 +1,4 @@
-"""FinBrain API — Core configuration."""
+"""Tio Patinhas API — Core configuration."""
 
 from pydantic_settings import BaseSettings
 
@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
     # Database
-    postgres_url: str = "postgresql://finbrain:finbrain@localhost:5432/finbrain"
+    postgres_url: str = "postgresql+psycopg://finbrain:finbrain@localhost:5432/finbrain"
 
     # Redis
     redis_url: str = "redis://localhost:6379"
@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     app_debug: bool = True
     cors_origins: str = "http://localhost:3000"
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+    model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 
 
 settings = Settings()

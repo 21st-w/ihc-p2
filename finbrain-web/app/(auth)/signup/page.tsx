@@ -101,7 +101,7 @@ export default function SignupPage() {
               </div>
               <p className="text-xs text-muted-foreground">Você pode adicionar mais depois.</p>
               <Button type="submit" className="w-full gap-2">
-                <Check className="w-4 h-4" /> Começar a usar o FinBrain
+                <Check className="w-4 h-4" /> Começar a usar o Tio Patinhas
               </Button>
             </form>
           )}

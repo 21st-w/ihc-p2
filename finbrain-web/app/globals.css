@@ -47,13 +47,13 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  /* FinBrain custom colors */
+  /* Tio Patinhas custom colors */
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-indigo: var(--indigo);
 }
 
-/* FinBrain Dark Theme — Indigo accent, dark background */
+/* Tio Patinhas Dark Theme — Indigo accent, dark background */
 :root {
   --background: #0A0A0F;
   --foreground: #F1F5F9;

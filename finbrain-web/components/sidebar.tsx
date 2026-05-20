@@ -54,7 +54,7 @@ export function Sidebar() {
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <Brain className="w-4 h-4 text-primary-foreground" />
             </div>
-            <span className="font-bold text-lg text-foreground tracking-tight">FinBrain</span>
+            <span className="font-bold text-lg text-foreground tracking-tight">Tio Patinhas</span>
           </Link>
           <button onClick={() => setOpen(false)} className="md:hidden p-1 hover:bg-accent rounded">
             <X className="w-4 h-4 text-muted-foreground" />

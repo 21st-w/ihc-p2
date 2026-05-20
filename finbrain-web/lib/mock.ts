@@ -1,5 +1,5 @@
 /**
- * FinBrain — Mock data for development without backend.
+ * Tio Patinhas — Mock data for development without backend.
  */
 
 export const mockUser = {

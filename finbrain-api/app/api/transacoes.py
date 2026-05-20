@@ -1,4 +1,4 @@
-"""FinBrain — Transaction API routes."""
+"""Tio Patinhas — Transaction API routes."""
 
 from datetime import datetime, timedelta, timezone
 

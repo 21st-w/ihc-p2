@@ -1,4 +1,4 @@
-"""FinBrain API — Main FastAPI application."""
+"""Tio Patinhas API — Main FastAPI application."""
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,7 +10,7 @@ from app.api.financeiro import router as financeiro_router
 from app.api.agentes import router as agentes_router
 
 app = FastAPI(
-    title="FinBrain API",
+    title="Tio Patinhas API",
     description="Laboratório financeiro pessoal com IA — backend.",
     version="0.1.0",
 )

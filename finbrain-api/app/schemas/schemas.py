@@ -1,4 +1,4 @@
-"""FinBrain — Pydantic schemas for API request/response validation."""
+"""Tio Patinhas — Pydantic schemas for API request/response validation."""
 
 from datetime import datetime
 from decimal import Decimal
