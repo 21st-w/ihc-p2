@@ -53,6 +53,18 @@ const RESPONSES: Array<{ keys: string[]; resp: MockResponse }> = [
     },
   },
   {
+    keys: [
+      "investir", "aplicar", "onde colocar", "onde guardar meu dinheiro",
+      "classes de ativos", "tipos de investimento", "como comecar", "começar a investir",
+      "pesquisa", "me explica", "me fala", "quais são", "quais sao",
+    ],
+    resp: {
+      agent: "educacional",
+      content:
+        "## 📚 Classes de Ativos — Visão Geral\n\nExistem três grandes grupos, organizados do mais simples/seguro para o mais complexo/volátil:\n\n### 1. Renda Fixa\nVocê empresta dinheiro para o governo ou bancos e recebe juros combinados.\n- **Tesouro Selic** — Referência de segurança, liquidez diária\n- **CDB, LCI, LCA** — Emitidos por bancos, cobertos pelo FGC até R$ 250k\n- **Debêntures** — Emitidas por empresas, maior risco e rendimento\n\n### 2. Fundos de Investimento\nUm gestor profissional monta a carteira. Você compra cotas.\n- **Fundos DI / Renda Fixa** — Conservadores\n- **Fundos Multimercado** — Mix de ativos\n- **FIIs (Fundos Imobiliários)** — Distribuem rendimentos mensais\n\n### 3. Renda Variável\nSem rentabilidade garantida — o preço oscila com o mercado.\n- **Ações** — Você vira sócio de empresas\n- **ETFs** — Fundos que replicam índices (ex: Ibovespa)\n- **Cripto** — Alta volatilidade, sem garantia\n\n---\n\n**Qual passo faz mais sentido para você?**\n- Se ainda não tem reserva de emergência → comece pela **Renda Fixa com liquidez**\n- Se já tem reserva e quer crescer → entenda seu **perfil de risco** (teste no seu Perfil)\n- Se tem dívidas com juros altos → **quite antes** de investir\n\n⚠️ *Conteúdo educacional. Não é recomendação de investimento.*",
+    },
+  },
+  {
     keys: ["dívida", "divida", "cartão", "cartao", "empréstimo", "emprestimo", "endividado"],
     resp: {
       agent: "sherlock",
@@ -71,7 +83,7 @@ function findResponse(input: string): MockResponse {
   return {
     agent: "educacional",
     content:
-      "Posso te ajudar com:\n\n- **Diagnóstico** da sua situação financeira\n- **Simulações** de juros compostos e reserva de emergência\n- **Conceitos** de renda fixa, Tesouro Direto, CDI\n- **Estratégias** de desendividamento\n\nTente perguntar algo como:\n- *\"Qual minha situação financeira atual?\"*\n- *\"Simule R$ 300/mês por 5 anos\"*\n- *\"Quanto preciso para minha reserva de emergência?\"*",
+      "Não entendi exatamente o que você quis dizer — pode reformular? 😊\n\nAqui está o que consigo responder:\n\n| Pergunta | Exemplo |\n|---|---|\n| Situação financeira | *\"Qual meu diagnóstico?\"* |\n| Simular crescimento | *\"Simule R$ 500/mês por 10 anos\"* |\n| Reserva de emergência | *\"Quanto preciso guardar?\"* |\n| Classes de ativos | *\"No que posso investir?\"* |\n| Renda fixa | *\"Como funciona o Tesouro Selic?\"* |\n| Dívidas | *\"Como sair das dívidas?\"* |\n\n⚠️ *Não recomendo ativos específicos — apenas educação financeira.*",
   };
 }
 
