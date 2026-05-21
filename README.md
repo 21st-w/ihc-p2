@@ -1,4 +1,4 @@
-# FinBrain
+# Tio Patinhas
 
 > Laboratório financeiro pessoal com IA: organiza seus gastos, mede sua saúde financeira e simula cenários educacionais — sem recomendar investimentos.
 
