@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { User, Mail, Shield, Trash2, PieChart, ArrowRight } from "lucide-react";
-import { mockUser, mockDiagnostico } from "@/lib/mock";
+import { mockUser, mockDiagnostico, mockDebts } from "@/lib/mock";
 
 const PERFIL_QUIZ = [
   { p: "Qual o seu principal objetivo ao investir?", resp: [{ t: "Preservar meu dinheiro", pts: 1 }, { t: "Fazer o dinheiro crescer a médio prazo", pts: 2 }, { t: "Maximizar ganhos, assumindo riscos", pts: 3 }] },
@@ -19,7 +19,6 @@ const PERFIL_QUIZ = [
 
 export default function PerfilPage() {
   const { score, nivel } = mockDiagnostico.score;
-  const breakdown = mockDiagnostico.score;
 
   const [quizOpen, setQuizOpen] = useState(false);
   const [step, setStep] = useState(0);
@@ -45,6 +44,15 @@ export default function PerfilPage() {
     setPontos(0);
     setResultado(null);
   };
+
+  // Compute breakdown from mock data so it reflects the active persona
+  const taxa = mockDiagnostico.diagnostico.taxa_poupanca;
+  const totalDebitos = mockDiagnostico.diagnostico.total_debitos;
+  const totalCreditos = mockDiagnostico.diagnostico.total_creditos;
+  const dividas = mockDebts?.reduce((s: number, d: { saldo: number }) => s + d.saldo, 0) ?? 0;
+  const poupancaScore = Math.min(100, Math.round(Math.max(0, taxa) * 150));
+  const dividaRendaScore = totalCreditos > 0 ? Math.min(100, Math.round(Math.max(0, 1 - totalDebitos / totalCreditos) * 100)) : 100;
+  const reservaScore = dividas === 0 && taxa > 0 ? Math.min(100, Math.round(taxa * 200)) : 0;
 
   return (
     <div className="space-y-6 max-w-2xl animate-fade-in">
@@ -114,16 +122,25 @@ export default function PerfilPage() {
           </div>
           <div className="space-y-3">
             <div>
-              <div className="flex justify-between text-xs mb-1"><span className="text-muted-foreground">Taxa de poupança</span><span>Peso: 40%</span></div>
-              <Progress value={75} className="h-2" />
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-muted-foreground">Taxa de poupança</span>
+                <span>{poupancaScore}/100 · Peso 40%</span>
+              </div>
+              <Progress value={poupancaScore} className="h-2" />
             </div>
             <div>
-              <div className="flex justify-between text-xs mb-1"><span className="text-muted-foreground">Dívida/Renda</span><span>Peso: 30%</span></div>
-              <Progress value={70} className="h-2" />
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-muted-foreground">Dívida/Renda</span>
+                <span>{dividaRendaScore}/100 · Peso 30%</span>
+              </div>
+              <Progress value={dividaRendaScore} className="h-2" />
             </div>
             <div>
-              <div className="flex justify-between text-xs mb-1"><span className="text-muted-foreground">Reserva de emergência</span><span>Peso: 30%</span></div>
-              <Progress value={0} className="h-2" />
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-muted-foreground">Reserva de emergência</span>
+                <span>{reservaScore}/100 · Peso 30%</span>
+              </div>
+              <Progress value={reservaScore} className="h-2" />
             </div>
           </div>
         </CardContent>
@@ -156,7 +173,7 @@ export default function PerfilPage() {
           <div className="mt-4">
             {step < PERFIL_QUIZ.length ? (
               <div className="space-y-4">
-                <Progress value={(step / PERFIL_QUIZ.length) * 100} className="h-1 mb-6" />
+                <Progress value={((step + 1) / PERFIL_QUIZ.length) * 100} className="h-1 mb-6" />
                 <h3 className="font-medium text-lg leading-tight mb-4">{PERFIL_QUIZ[step].p}</h3>
                 <div className="space-y-2">
                   {PERFIL_QUIZ[step].resp.map((r, i) => (

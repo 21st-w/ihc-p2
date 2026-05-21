@@ -90,7 +90,7 @@ export default function SignupPage() {
 
           {step === 3 && (
             <form onSubmit={(e) => { e.preventDefault(); router.push("/dashboard"); }} className="space-y-4">
-              <p className="text-sm text-muted-foreground">Cadastre sua renda para começar (opcional):</p>
+              <p className="text-sm text-muted-foreground">Cadastre sua renda para começar (opcional — você pode preencher depois):</p>
               <div>
                 <label className="text-xs text-muted-foreground">Renda mensal líquida (R$)</label>
                 <Input type="number" placeholder="8000" className="mt-1 bg-muted/30" />
@@ -99,10 +99,16 @@ export default function SignupPage() {
                 <label className="text-xs text-muted-foreground">Maior gasto fixo (ex: aluguel)</label>
                 <Input type="number" placeholder="2500" className="mt-1 bg-muted/30" />
               </div>
-              <p className="text-xs text-muted-foreground">Você pode adicionar mais depois.</p>
               <Button type="submit" className="w-full gap-2">
                 <Check className="w-4 h-4" /> Começar a usar o Tio Patinhas
               </Button>
+              <button
+                type="button"
+                onClick={() => router.push("/dashboard")}
+                className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Pular por agora
+              </button>
             </form>
           )}
         </CardContent>

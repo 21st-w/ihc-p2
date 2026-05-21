@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -33,43 +32,6 @@ const SUGGESTED_CHIPS = [
   "Como funciona o Tesouro Selic?",
 ];
 
-const MOCK_RESPONSES: Record<string, { agent: string; skill?: string; content: string; blocked?: boolean }> = {
-  "qual ação comprar": {
-    agent: "athena",
-    blocked: true,
-    content: "Não posso recomendar ativos específicos — isso seria consultoria de valores mobiliários, o que exige credenciamento na CVM. Mas posso te explicar como avaliar diferentes classes de ativos e como montar uma estratégia diversificada para seus objetivos! O que gostaria de saber?",
-  },
-  "situação financeira": {
-    agent: "sherlock",
-    skill: "diagnostico_gastos + score_saude",
-    content: "## 📊 Diagnóstico Rápido\n\nSua saúde financeira está em **Bom** (62/100).\n\n- **Taxa de poupança:** ~73% — excelente!\n- **Gastos fixos:** R$ 2.780 (moradia + contas)\n- **Assinaturas:** R$ 77,80/mês\n- **Dívida:** financiamento de R$ 45.000\n\n💡 **Próximo passo:** Monte uma reserva de emergência de 6 meses (≈ R$ 24.000).",
-  },
-  "simule": {
-    agent: "benjamin",
-    skill: "juros_compostos",
-    content: "## 📈 Simulação de Juros Compostos\n\nCom **R$ 300/mês** durante **5 anos** a **1% a.m.**:\n\n- **Valor final:** R$ 24.671,28\n- **Total investido:** R$ 18.000,00\n- **Juros acumulados:** R$ 6.671,28\n\nÉ como uma bola de neve: nos primeiros meses o efeito é pequeno, mas nos últimos 12 meses os juros sozinhos rendem mais do que um aporte inteiro!",
-  },
-  "reserva": {
-    agent: "benjamin",
-    skill: "reserva_emergencia",
-    content: "## 🛡️ Reserva de Emergência\n\nBaseado nos seus gastos essenciais de ~R$ 4.000/mês:\n\n- **Reserva ideal:** R$ 24.000 (6 meses)\n- **Se poupar R$ 1.000/mês:** atingiria em **24 meses**\n- **Se poupar R$ 2.000/mês:** atingiria em **12 meses**\n\n💡 Guarde em investimentos com **liquidez diária** (Tesouro Selic ou CDB com liquidez).",
-  },
-  "tesouro": {
-    agent: "educacional",
-    content: "## 📚 Tesouro Selic\n\nO **Tesouro Selic** é um título público federal que acompanha a taxa Selic (hoje 14,75% a.a.).\n\n**Características:**\n- ✅ Liquidez diária (resgata em D+1)\n- ✅ Baixa volatilidade (praticamente não perde valor)\n- ✅ Garantido pelo Governo Federal\n- ⚠️ IR regressivo (22,5% a 15% conforme prazo)\n- ⚠️ Taxa B3 de 0,20% a.a.\n\n**Para quem serve:** reserva de emergência e objetivos de curto prazo.\n\nFonte: Tesouro Nacional (tesourodireto.com.br)",
-  },
-};
-
-function findMockResponse(input: string) {
-  const lower = input.toLowerCase();
-  for (const [key, resp] of Object.entries(MOCK_RESPONSES)) {
-    if (lower.includes(key)) return resp;
-  }
-  return {
-    agent: "educacional",
-    content: "Ótima pergunta! Posso te ajudar com:\n- Diagnóstico financeiro\n- Simulações de juros compostos\n- Reserva de emergência\n- Conceitos de investimento\n\nTente perguntar algo como 'Qual minha situação financeira?' ou 'Simule R$ 500/mês por 10 anos'.",
-  };
-}
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -128,9 +90,9 @@ export default function ChatPage() {
             try {
               const data = JSON.parse(dataStr);
               if (data.type === "meta") {
-                setMessages(prev => prev.map(m => 
-                  m.id === agentMsgId 
-                    ? { ...m, agent: data.agente_usado, skill: data.skill_chamada } 
+                setMessages(prev => prev.map(m =>
+                  m.id === agentMsgId
+                    ? { ...m, agent: data.agente_usado, skill: data.skill_chamada, blocked: data.blocked ?? false }
                     : m
                 ));
               } else if (data.type === "chunk") {
@@ -247,7 +209,7 @@ export default function ChatPage() {
           Conteúdo educacional — não é recomendação de investimento.
         </div>
         <form
-          onSubmit={(e) => { e.preventDefault(); handleSend(); }}
+          onSubmit={(ev) => { ev.preventDefault(); handleSend(); }}
           className="flex gap-2"
         >
           <Input

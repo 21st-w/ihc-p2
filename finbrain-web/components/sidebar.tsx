@@ -4,18 +4,36 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, ArrowLeftRight, LineChart,
-  MessageCircle, User, Settings, Brain, X, Menu,
+  MessageCircle, User, Brain, X, Menu, Check,
 } from "lucide-react";
 import { useState } from "react";
 import { mockUser } from "@/lib/mock";
 
-const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/transacoes", label: "Transações", icon: ArrowLeftRight },
-  { href: "/simulacoes", label: "Simulações", icon: LineChart },
-  { href: "/chat", label: "Chat", icon: MessageCircle },
-  { href: "/perfil", label: "Perfil", icon: User },
+// Evaluated once per page load on the client.
+// Profile changes always call window.location.reload(), so this stays in sync.
+const ACTIVE_PROFILE =
+  typeof window !== "undefined"
+    ? (localStorage.getItem("finbrain_profile") || "rico")
+    : "rico";
+
+const NAV_ITEMS = [
+  { href: "/dashboard",   label: "Dashboard",   icon: LayoutDashboard },
+  { href: "/transacoes",  label: "Transações",  icon: ArrowLeftRight },
+  { href: "/simulacoes",  label: "Simulações",  icon: LineChart },
+  { href: "/chat",        label: "Chat",        icon: MessageCircle },
+  { href: "/perfil",      label: "Perfil",      icon: User },
 ];
+
+const PROFILES = [
+  { id: "rico",       dot: "bg-emerald-400", label: "Rico (Investidor)" },
+  { id: "endividado", dot: "bg-red-400",     label: "Endividado" },
+  { id: "minimo",     dot: "bg-yellow-400",  label: "Salário Mínimo" },
+] as const;
+
+function switchProfile(profile: string) {
+  localStorage.setItem("finbrain_profile", profile);
+  window.location.reload();
+}
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -64,7 +82,7 @@ export function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 px-3 py-4 space-y-1">
-          {navItems.map(({ href, label, icon: Icon }) => {
+          {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
             const isActive = pathname === href;
             return (
               <Link
@@ -87,32 +105,31 @@ export function Sidebar() {
         </nav>
 
         {/* Profile Switcher */}
-        <div className="px-4 py-4 border-t border-sidebar-border space-y-4">
-          <div className="flex items-center justify-between px-2">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Trocar Perfil</span>
-          </div>
-          <div className="flex flex-col gap-1">
-            <button 
-              onClick={() => { localStorage.setItem("finbrain_profile", "rico"); window.location.reload(); }}
-              className="text-left text-xs px-3 py-2 rounded hover:bg-primary/10 hover:text-primary transition-colors flex items-center gap-2"
-            >
-              <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
-              Rico (Investidor)
-            </button>
-            <button 
-              onClick={() => { localStorage.setItem("finbrain_profile", "endividado"); window.location.reload(); }}
-              className="text-left text-xs px-3 py-2 rounded hover:bg-primary/10 hover:text-primary transition-colors flex items-center gap-2"
-            >
-              <div className="w-2 h-2 rounded-full bg-red-400"></div>
-              Endividado
-            </button>
-            <button 
-              onClick={() => { localStorage.setItem("finbrain_profile", "minimo"); window.location.reload(); }}
-              className="text-left text-xs px-3 py-2 rounded hover:bg-primary/10 hover:text-primary transition-colors flex items-center gap-2"
-            >
-              <div className="w-2 h-2 rounded-full bg-yellow-400"></div>
-              Salário Mínimo
-            </button>
+        <div className="px-4 py-4 border-t border-sidebar-border space-y-2">
+          <span className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            Trocar Perfil Demo
+          </span>
+          <div className="flex flex-col gap-0.5">
+            {PROFILES.map(({ id, dot, label }) => {
+              const isActive = ACTIVE_PROFILE === id;
+              return (
+                <button
+                  key={id}
+                  suppressHydrationWarning
+                  onClick={() => switchProfile(id)}
+                  aria-pressed={isActive}
+                  className={`text-left text-xs px-3 py-2 rounded transition-colors flex items-center gap-2 ${
+                    isActive
+                      ? "bg-primary/10 text-primary font-semibold"
+                      : "hover:bg-primary/10 hover:text-primary text-sidebar-foreground"
+                  }`}
+                >
+                  <div className={`w-2 h-2 rounded-full shrink-0 ${dot}`} />
+                  <span className="flex-1">{label}</span>
+                  {isActive && <Check className="w-3 h-3 shrink-0" />}
+                </button>
+              );
+            })}
           </div>
         </div>
 

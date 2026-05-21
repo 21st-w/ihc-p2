@@ -18,7 +18,7 @@ export default function LoginPage() {
             <Brain className="w-7 h-7 text-primary-foreground" />
           </div>
           <div>
-            <CardTitle className="text-2xl">Entrar no FinBrain</CardTitle>
+            <CardTitle className="text-2xl">Entrar no Tio Patinhas</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">Seu laboratório financeiro pessoal</p>
           </div>
         </CardHeader>

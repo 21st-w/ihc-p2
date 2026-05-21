@@ -2,7 +2,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -15,17 +14,28 @@ import {
 } from "recharts";
 import { mockUser, mockIndicadores, mockDiagnostico, mockGastosPorCategoria, mockIncome } from "@/lib/mock";
 import Link from "next/link";
+import ReactMarkdown from "react-markdown";
 import { useState, useEffect } from "react";
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState("2h atrás");
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 800);
     return () => clearTimeout(timer);
   }, []);
 
-  const rendaMensal = mockIncome.reduce((acc: number, item: any) => acc + item.valor_mensal, 0);
+  const handleRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+      setLastUpdated("agora mesmo");
+    }, 1500);
+  };
+
+  const rendaMensal = mockIncome.reduce((acc: number, item: { valor_mensal: number }) => acc + item.valor_mensal, 0);
   const gastosMes = mockDiagnostico.diagnostico.total_debitos;
   const sobra = rendaMensal - gastosMes;
   const score = mockDiagnostico.score.score;
@@ -44,9 +54,16 @@ export default function DashboardPage() {
           <h1 suppressHydrationWarning className="text-2xl font-bold">Olá, {mockUser.nome} 👋</h1>
           <p className="text-sm text-muted-foreground capitalize">{dateStr}</p>
         </div>
-        <Button variant="outline" size="sm" className="gap-2 self-start">
-          <RefreshCw className="w-4 h-4" />
-          Atualizar diagnóstico
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2 self-start"
+          onClick={handleRefresh}
+          disabled={refreshing}
+          aria-label="Atualizar diagnóstico do Sherlock"
+        >
+          <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+          {refreshing ? "Atualizando…" : "Atualizar diagnóstico"}
         </Button>
       </div>
 
@@ -134,11 +151,13 @@ export default function DashboardPage() {
                 </div>
                 <CardTitle className="text-base">Diagnóstico do Sherlock</CardTitle>
               </div>
-              <Badge variant="outline" className="text-xs text-muted-foreground">Última análise: 2h atrás</Badge>
+              <Badge variant="outline" className="text-xs text-muted-foreground">
+                Última análise: {lastUpdated}
+              </Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            {loading ? (
+            {loading || refreshing ? (
               <div className="space-y-2">
                 <Skeleton className="h-4 w-full" />
                 <Skeleton className="h-4 w-3/4" />
@@ -146,15 +165,14 @@ export default function DashboardPage() {
               </div>
             ) : (
               <>
-                <div className="text-sm text-muted-foreground leading-relaxed max-h-60 overflow-y-auto prose prose-invert prose-sm">
-                  <p><strong>Situação:</strong> Score {score}/100 ({mockDiagnostico.score.nivel}). Taxa de poupança de ~73%.</p>
-                  <p><strong>Fortes:</strong> Boa taxa de poupança, renda diversificada.</p>
-                  <p><strong>Atenção:</strong> Assinaturas somam R$ 77,80/mês. Financiamento compromete R$ 1.500/mês.</p>
-                  <p><strong>Próximos passos:</strong> Montar reserva de emergência e revisar assinaturas.</p>
+                <div className="text-sm text-muted-foreground leading-relaxed max-h-60 overflow-y-auto prose prose-invert prose-sm [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-0 [&_h2]:mb-1 [&_p]:mb-2 [&_ul]:my-1 [&_li]:my-0">
+                  <ReactMarkdown>{mockDiagnostico.narrativa}</ReactMarkdown>
                 </div>
-                <Button variant="ghost" size="sm" className="text-primary gap-1">
-                  Ver análise completa <ArrowRight className="w-3 h-3" />
-                </Button>
+                <Link href="/chat">
+                  <Button variant="ghost" size="sm" className="text-primary gap-1 px-0 hover:bg-transparent">
+                    Ver análise completa no Chat <ArrowRight className="w-3 h-3" />
+                  </Button>
+                </Link>
               </>
             )}
           </CardContent>
