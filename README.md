@@ -1,4 +1,4 @@
-# Tio Patinhas
+# FinBrain
 
 > Laboratório financeiro pessoal com IA: organiza seus gastos, mede sua saúde financeira e simula cenários educacionais — sem recomendar investimentos.
 
@@ -6,7 +6,7 @@
 
 ## Visão do produto
 
-O Tio Patinhas ajuda profissionais brasileiros de classe média-alta a entender e melhorar sua vida financeira usando:
+O FinBrain ajuda profissionais brasileiros de classe média-alta a entender e melhorar sua vida financeira usando:
 
 - cadastro de renda, gastos, assinaturas e dívidas;
 - diagnóstico em linguagem natural via agente **Sherlock**;
@@ -24,12 +24,12 @@ Profissional de 28–42 anos, renda R$ 8k–25k, tem app de banco mas não tem c
 
 ### Métricas de sucesso (90 dias)
 
-| Métrica | Definição |
-|---|---|
-| **Ativação** | % usuários que completam cadastro de gastos em ≤ 7 dias |
-| **Retenção D30** | % que voltam após 30 dias |
-| **Aha moment** | % que rodam ≥ 1 simulação após ver diagnóstico do Sherlock |
-| **NPS qualitativo** | Top-2-box ≥ 40% |
+| Métrica             | Definição                                                  |
+| ------------------- | ---------------------------------------------------------- |
+| **Ativação**        | % usuários que completam cadastro de gastos em ≤ 7 dias    |
+| **Retenção D30**    | % que voltam após 30 dias                                  |
+| **Aha moment**      | % que rodam ≥ 1 simulação após ver diagnóstico do Sherlock |
+| **NPS qualitativo** | Top-2-box ≥ 40%                                            |
 
 ---
 
@@ -59,11 +59,11 @@ O MVP real são **3 fluxos**, não 8 features:
 
 ## Roadmap em ondas
 
-| Onda | Prazo | O que entra |
-|---|---|---|
-| **Onda 0** | 4–6 semanas | Cadastro manual + Sherlock + 1 simulação + Athena + chat básico |
-| **Onda 1** | +6 semanas | Benjamin completo + Yuyu como widget de mercado |
-| **Onda 2** | +8 semanas | Obsidian como UI, exportação completa, Open Finance (via parceiro autorizado) |
+| Onda       | Prazo       | O que entra                                                                   |
+| ---------- | ----------- | ----------------------------------------------------------------------------- |
+| **Onda 0** | 4–6 semanas | Cadastro manual + Sherlock + 1 simulação + Athena + chat básico               |
+| **Onda 1** | +6 semanas  | Benjamin completo + Yuyu como widget de mercado                               |
+| **Onda 2** | +8 semanas  | Obsidian como UI, exportação completa, Open Finance (via parceiro autorizado) |
 
 ---
 
@@ -109,13 +109,13 @@ infra/
 
 ### Stack de IA
 
-| Papel | Modelo |
-|---|---|
-| Planner (decide qual skill chamar) | Claude Sonnet |
-| Explicador (verbaliza resultado) | Claude Sonnet |
-| Classificação de gastos | Claude Haiku |
-| LLM judge (Athena camada 2) | Claude Haiku |
-| Embeddings | `text-embedding-3-small` ou `bge-m3` self-hosted |
+| Papel                              | Modelo                                           |
+| ---------------------------------- | ------------------------------------------------ |
+| Planner (decide qual skill chamar) | Claude Sonnet                                    |
+| Explicador (verbaliza resultado)   | Claude Sonnet                                    |
+| Classificação de gastos            | Claude Haiku                                     |
+| LLM judge (Athena camada 2)        | Claude Haiku                                     |
+| Embeddings                         | `text-embedding-3-small` ou `bge-m3` self-hosted |
 
 > **Regra fundamental:** cálculo financeiro **nunca** passa pelo LLM. Sempre por função determinística testada em `app/skills/`.
 
@@ -123,15 +123,15 @@ infra/
 
 ## Agentes
 
-| Agente | Função | Fase |
-|---|---|---|
-| **Sherlock** | Diagnóstico de perfil financeiro em linguagem natural | Onda 0 |
-| **Benjamin** | Simulações educacionais (juros compostos, reserva, carteira) | Onda 0–1 |
-| **Athena** | Guardrails: bloqueia recomendações, injeta disclaimers | Onda 0 |
-| **Planner** | Decide qual skill chamar com base no input do usuário | Interno |
-| **Explicador** | Verbaliza resultado da skill com guardrails | Interno |
-| **Yuyu** | Widget de mercado: Selic, IPCA, USD, Ibovespa | Onda 1 |
-| **Morpheus** | Orquestrador de agentes (interno, não exposto ao usuário) | Interno |
+| Agente         | Função                                                       | Fase     |
+| -------------- | ------------------------------------------------------------ | -------- |
+| **Sherlock**   | Diagnóstico de perfil financeiro em linguagem natural        | Onda 0   |
+| **Benjamin**   | Simulações educacionais (juros compostos, reserva, carteira) | Onda 0–1 |
+| **Athena**     | Guardrails: bloqueia recomendações, injeta disclaimers       | Onda 0   |
+| **Planner**    | Decide qual skill chamar com base no input do usuário        | Interno  |
+| **Explicador** | Verbaliza resultado da skill com guardrails                  | Interno  |
+| **Yuyu**       | Widget de mercado: Selic, IPCA, USD, Ibovespa                | Onda 1   |
+| **Morpheus**   | Orquestrador de agentes (interno, não exposto ao usuário)    | Interno  |
 
 ### Arquitetura de agentes (MVP)
 
@@ -164,16 +164,16 @@ Resposta ao usuário + log em agent_logs
 
 Funções puras, tipadas com `Decimal`, cobertura de testes ≥ 95%:
 
-| Função | O que calcula |
-|---|---|
-| `juros_compostos_com_aportes` | FV, juros totais, aportes totais |
-| `equivalencia_taxas` | a.m. ↔ a.a. ↔ CDI% |
-| `reserva_emergencia` | Baseada em gastos essenciais (não renda) |
-| `taxa_poupanca` | Renda líquida vs. gastos totais |
-| `score_saude_financeira` | Score 0–100 com breakdown por dimensão |
-| `tributacao_renda_fixa` | Alíquota regressiva, IR, retorno líquido |
-| `tributacao_acoes_pf` | Day trade, isenção até R$ 20k/mês |
-| `simulacao_carteira` | Retorno esperado, vol, Sharpe, drawdown estimado |
+| Função                        | O que calcula                                    |
+| ----------------------------- | ------------------------------------------------ |
+| `juros_compostos_com_aportes` | FV, juros totais, aportes totais                 |
+| `equivalencia_taxas`          | a.m. ↔ a.a. ↔ CDI%                               |
+| `reserva_emergencia`          | Baseada em gastos essenciais (não renda)         |
+| `taxa_poupanca`               | Renda líquida vs. gastos totais                  |
+| `score_saude_financeira`      | Score 0–100 com breakdown por dimensão           |
+| `tributacao_renda_fixa`       | Alíquota regressiva, IR, retorno líquido         |
+| `tributacao_acoes_pf`         | Day trade, isenção até R$ 20k/mês                |
+| `simulacao_carteira`          | Retorno esperado, vol, Sharpe, drawdown estimado |
 
 > Usar `Decimal`, nunca `float`. Toda função com docstring de fórmula, premissas e exemplo numérico.
 
@@ -211,14 +211,14 @@ knowledge_chunks(id, titulo, topico, conteudo, embedding, tags)
 
 ## Dados de mercado (APIs oficiais)
 
-| Indicador | Fonte |
-|---|---|
-| Selic meta (cód. 432) | BCB SGS API |
-| IPCA (cód. 433) | BCB SGS API |
-| CDI (cód. 12) | BCB SGS API |
-| USD/BRL (cód. 1) | BCB SGS API |
-| Tesouro Direto | Tesouro Transparente API |
-| Cotações B3 / Ibovespa | Brapi (free tier) |
+| Indicador              | Fonte                    |
+| ---------------------- | ------------------------ |
+| Selic meta (cód. 432)  | BCB SGS API              |
+| IPCA (cód. 433)        | BCB SGS API              |
+| CDI (cód. 12)          | BCB SGS API              |
+| USD/BRL (cód. 1)       | BCB SGS API              |
+| Tesouro Direto         | Tesouro Transparente API |
+| Cotações B3 / Ibovespa | Brapi (free tier)        |
 
 > Job diário às 19h BRT. Cache Redis 1h. Fallback com flag `stale` se API cair.
 > Widget no dashboard exibe apenas índices e indicadores macro — **nunca tickers individuais**.
@@ -354,12 +354,12 @@ promptfoo eval
 
 ### Gates de cobertura (CI bloqueia PR se cair)
 
-| Módulo | Cobertura mínima |
-|---|---|
-| `app/skills/` | ≥ 95% |
-| `app/guardrails/` | ≥ 90% |
-| `app/agents/` | ≥ 75% |
-| Global | ≥ 85% |
+| Módulo            | Cobertura mínima |
+| ----------------- | ---------------- |
+| `app/skills/`     | ≥ 95%            |
+| `app/guardrails/` | ≥ 90%            |
+| `app/agents/`     | ≥ 75%            |
+| Global            | ≥ 85%            |
 
 ---
 
@@ -412,18 +412,6 @@ Cada prompt carregado com hash para rastreabilidade em `agent_logs`.
 
 ---
 
-## Ordem de execução
-
-| Semana | Ferramenta | Entregáveis |
-|---|---|---|
-| 1–2 | Claude Code + Codex | Setup, modelo de dados, migrations, skills determinísticas |
-| 2–3 | Claude Code + Gemini | Agentes (Planner, Sherlock, Athena) + corpus + eval set |
-| 3–4 | Antigravity + Codex | Frontend, integrações de mercado, testes unitários |
-| 4–5 | Antigravity + Gemini | Chat integrado ao backend, parsing de extratos |
-| 5–6 | Todos | Hardening, eval em produção, beta fechado |
-
----
-
 ## Decisões de arquitetura
 
 - **B2C primeiro** — é onde IHC, agentes e produto são validados.
@@ -441,7 +429,7 @@ Cada prompt carregado com hash para rastreabilidade em `agent_logs`.
 
 ## Autor
 
-Felipe Murilo Ribeiro Ribeiro
+Felipe Murilo Ribeiro Ribeiro - 21st-w
 
 ## Licença
 

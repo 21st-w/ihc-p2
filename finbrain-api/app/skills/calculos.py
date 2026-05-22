@@ -16,27 +16,51 @@ def _round(value: Decimal) -> Decimal:
 
 
 def juros_compostos(
-    pv: Decimal, aporte: Decimal, taxa_mensal: Decimal, meses: int,
+    pv: Decimal, aporte: Decimal, taxa_mensal: Decimal = None, meses: int = 12,
+    retorno_anual: Decimal = None,
 ) -> dict[str, Any]:
     """Juros compostos com aportes mensais.
+    
     Fórmula: saldo[m] = saldo[m-1] * (1 + taxa) + aporte
+    
+    Parâmetros:
+    - pv: Valor inicial
+    - aporte: Aporte mensal
+    - taxa_mensal: Taxa mensal (ex: 0.01 = 1% ao mês) OU
+    - retorno_anual: Retorno anual esperado (ex: 0.15 = 15% ao ano) - mais realista para investimentos
+    - meses: Número de meses
+    
+    Exemplo realista: juros_compostos(pv=1000, aporte=300, retorno_anual=0.15, meses=60)
+    = Simula R$ 300/mês por 5 anos com 15% ao ano (Tesouro Selic aproximado)
     """
+    # Se retorno_anual foi passado, converter para taxa mensal
+    if retorno_anual is not None:
+        # taxa_mensal = (1 + retorno_anual)^(1/12) - 1
+        taxa_mensal = (Decimal("1") + retorno_anual) ** (Decimal("1") / Decimal("12")) - Decimal("1")
+    elif taxa_mensal is None:
+        raise ValueError("Forneça taxa_mensal OU retorno_anual")
+    
     if meses < 0:
         raise ValueError("Meses não pode ser negativo")
     if taxa_mensal < 0:
         raise ValueError("Taxa mensal não pode ser negativa")
+    
     saldo = pv
     total_investido = pv
-    evolucao = [{"mes": 0, "saldo": _round(saldo)}]
+    evolucao = [{"mes": 0, "saldo": _round(saldo), "aporte": _round(Decimal("0"))}]
     for mes in range(1, meses + 1):
         saldo = saldo * (Decimal("1") + taxa_mensal) + aporte
         total_investido += aporte
-        evolucao.append({"mes": mes, "saldo": _round(saldo)})
+        evolucao.append({"mes": mes, "saldo": _round(saldo), "aporte": _round(aporte)})
     total_juros = saldo - total_investido
+    taxa_anual_efetiva = ((Decimal("1") + taxa_mensal) ** Decimal("12") - Decimal("1")) * Decimal("100")
+    
     return {
         "valor_final": _round(saldo),
         "total_investido": _round(total_investido),
         "total_juros": _round(total_juros),
+        "taxa_mensal_utilizada": _round(taxa_mensal * Decimal("100")),
+        "taxa_anual_efetiva": _round(taxa_anual_efetiva),
         "evolucao": evolucao,
     }
 

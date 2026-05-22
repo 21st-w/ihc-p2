@@ -57,7 +57,7 @@ function calcular(tipo: SimType, params: SimParams, ativos: AtivoRow[]): SimResu
       PETR4: 38.50, VALE3: 62.10, ITUB4: 32.40, WEGE3: 45.20, BBDC4: 13.80,
       B3SA3: 11.50, BBAS3: 27.90, ELET3: 40.10, RENT3: 42.00, ABEV3: 12.30,
     };
-    let valorInicial = ativos.reduce((acc, a) => {
+    const valorInicial = ativos.reduce((acc, a) => {
       const num = parseFloat(a.montante || "0");
       return acc + (a.tipo === "cotas" ? num * (mockPrices[a.ticker.toUpperCase()] ?? 20) : num);
     }, 0);

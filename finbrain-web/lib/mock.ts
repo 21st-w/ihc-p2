@@ -97,10 +97,10 @@ const PERFIL_MINIMO = {
   ]
 };
 
-const PROFILES: Record<string, any> = {
-  rico: PERFIL_RICO,
-  endividado: PERFIL_ENDIVIDADO,
-  minimo: PERFIL_MINIMO
+const PROFILES: Record<string, typeof PERFIL_RICO> = {
+  rico: PERFIL_RICO as typeof PERFIL_RICO,
+  endividado: PERFIL_ENDIVIDADO as typeof PERFIL_RICO,
+  minimo: PERFIL_MINIMO as typeof PERFIL_RICO
 };
 
 const getProfileId = () => {

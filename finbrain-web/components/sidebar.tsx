@@ -6,15 +6,9 @@ import {
   LayoutDashboard, ArrowLeftRight, LineChart,
   MessageCircle, User, Brain, X, Menu, Check,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { mockUser } from "@/lib/mock";
 
-// Evaluated once per page load on the client.
-// Profile changes always call window.location.reload(), so this stays in sync.
-const ACTIVE_PROFILE =
-  typeof window !== "undefined"
-    ? (localStorage.getItem("finbrain_profile") || "rico")
-    : "rico";
 
 const NAV_ITEMS = [
   { href: "/dashboard",   label: "Dashboard",   icon: LayoutDashboard },
@@ -38,6 +32,15 @@ function switchProfile(profile: string) {
 export function Sidebar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [activeProfile, setActiveProfile] = useState("rico");
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Sincronizar com localStorage após hidratação
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setActiveProfile(localStorage.getItem("finbrain_profile") || "rico");
+    setIsHydrated(true);
+  }, []);
 
   return (
     <>
@@ -111,7 +114,7 @@ export function Sidebar() {
           </span>
           <div className="flex flex-col gap-0.5">
             {PROFILES.map(({ id, dot, label }) => {
-              const isActive = ACTIVE_PROFILE === id;
+                const isActive = activeProfile === id;
               return (
                 <button
                   key={id}
@@ -126,10 +129,10 @@ export function Sidebar() {
                 >
                   <div className={`w-2 h-2 rounded-full shrink-0 ${dot}`} />
                   <span className="flex-1">{label}</span>
-                  {isActive && <Check className="w-3 h-3 shrink-0" />}
+                    {isHydrated && isActive && <Check className="w-3 h-3 shrink-0" />}
                 </button>
               );
-            })}
+              })}
           </div>
         </div>
 

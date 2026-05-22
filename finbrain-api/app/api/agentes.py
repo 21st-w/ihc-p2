@@ -96,7 +96,7 @@ PLANNER_PROMPT = """Classifique a intenção do usuário em UMA das categorias:
 Responda APENAS com JSON válido: {"intencao": "...", "params": {...}}
 
 Exemplos de params:
-- simulacao_juros: {"valor_inicial": 1000, "aporte_mensal": 500, "taxa_mensal": 0.01, "meses": 12}
+- simulacao_juros: {"valor_inicial": 1000, "aporte_mensal": 300, "retorno_anual": 0.15, "meses": 60} (retorno_anual em forma decimal: 0.15 = 15% ao ano)
 - simulacao_reserva: {"gastos_essenciais": 3000, "meses_cobertura": 6, "aporte_mensal": 500}
 - simulacao_comparar: {"valor_inicial": 1000, "aporte_mensal": 500, "meses": 12}
 

@@ -58,7 +58,7 @@ def simular(tipo: str, params: dict, anthropic_client=None, stream: bool = False
             result = juros_compostos(
                 pv=Decimal(str(params.get("valor_inicial", 0))),
                 aporte=Decimal(str(params.get("aporte_mensal", 0))),
-                taxa_mensal=Decimal(str(params.get("taxa_mensal", "0.01"))),
+                retorno_anual=Decimal(str(params.get("retorno_anual", "0.15"))),  # 15% ao ano por padrão (Tesouro Selic)
                 meses=int(params.get("meses", 12)),
             )
         elif tipo == "reserva_emergencia":
