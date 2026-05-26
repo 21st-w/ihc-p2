@@ -453,9 +453,18 @@ const DashboardScreen = ({ state, go, openSave }) => {
 };
 
 // ============================================
-// CLIENT VIEWER — visao limpa para usuario final
+// CLIENT VIEWER — area simplificada do cliente final
 // ============================================
-const ClientViewer = ({ state, apiNodes = [] }) => {
+const ClientViewer = ({ state, setState, userId, toast = () => {} }) => {
+  const [tab, setTab] = useS_main("summary");
+  const [formType, setFormType] = useS_main(null);
+  const [form, setForm] = useS_main({});
+  const [question, setQuestion] = useS_main("");
+  const [answer, setAnswer] = useS_main("");
+  const [asking, setAsking] = useS_main(false);
+  const [marketData, setMarketData] = useS_main(null);
+  const [marketError, setMarketError] = useS_main("");
+
   const sum = (arr) => arr.reduce((a, b) => a + (Number(b.value) || 0), 0);
   const renda = sum(state.renda);
   const fixos = sum(state.fixos);
@@ -469,75 +478,260 @@ const ClientViewer = ({ state, apiNodes = [] }) => {
   const reservaBase = fixos + dividas;
   const reservaAlvo = reservaBase * 6;
   const mesesReserva = state.meta > 0 ? Math.ceil(reservaAlvo / state.meta) : null;
+  const maiorGrupo = [
+    ["gastos fixos", fixos],
+    ["gastos variáveis", variaveis],
+    ["assinaturas", assinaturas],
+    ["dívidas", dividas],
+  ].sort((a, b) => b[1] - a[1])[0];
 
   const diagnostico = comprometido > 90
-    ? "Sua renda esta muito comprometida. O foco educacional deve ser recuperar margem antes de assumir novos compromissos."
+    ? "Sua renda está muito comprometida. O foco educacional deve ser recuperar margem antes de assumir novos compromissos."
     : comprometido > 75
-      ? "Sua margem existe, mas esta apertada. O ponto principal e revisar gastos recorrentes e proteger sua reserva."
-      : "Sua situacao mostra margem para organizacao. O proximo passo e transformar a sobra em rotina e acompanhar desvios.";
+      ? "Sua margem existe, mas está apertada. O ponto principal é revisar gastos recorrentes e proteger sua reserva."
+      : "Sua situação mostra margem para organização. O próximo passo é transformar a sobra em rotina e acompanhar desvios.";
+
+  useE_main(() => {
+    let alive = true;
+    Promise.all([api.getSelic(), api.getCdi(), api.getPoupanca()])
+      .then(([selic, cdi, poupanca]) => {
+        if (!alive) return;
+        const data = { selic, cdi, poupanca };
+        const ok = Object.values(data).some((item) => item && item.success);
+        setMarketData(data);
+        setMarketError(ok ? "" : "Dados de mercado indisponíveis. Usando premissas educacionais manuais.");
+      })
+      .catch(() => {
+        if (!alive) return;
+        setMarketData(null);
+        setMarketError("Dados de mercado indisponíveis. Usando premissas educacionais manuais.");
+      });
+    return () => { alive = false; };
+  }, []);
+
+  const resetForm = (type) => {
+    setFormType(type);
+    setForm({ date: new Date().toISOString().slice(0, 10), category: "" });
+    setTab("add");
+  };
+
+  const updateForm = (key, value) => setForm({ ...form, [key]: value });
+
+  const appendItem = (key, item) => {
+    setState({ ...state, [key]: [...state[key], { id: Math.random().toString(36).slice(2), ...item }] });
+  };
+
+  const handleSaveItem = () => {
+    const value = Number(form.value || form.monthlyValue || 0);
+    if (!value || value <= 0) {
+      toast("Informe um valor maior que zero.");
+      return;
+    }
+
+    if (formType === "income") {
+      appendItem("renda", {
+        name: form.description || "Renda recebida",
+        value,
+        date: form.date,
+        category: form.category || "renda",
+      });
+      toast("Renda adicionada.");
+    }
+
+    if (formType === "expense") {
+      const key = form.category === "fixo" ? "fixos"
+        : form.category === "assinatura" ? "assinaturas"
+          : form.category === "divida" ? "dividas"
+            : "variaveis";
+      appendItem(key, {
+        name: form.description || "Gasto",
+        value,
+        date: form.date,
+        category: form.category || "variavel",
+      });
+      toast("Gasto adicionado.");
+    }
+
+    if (formType === "subscription") {
+      appendItem("assinaturas", {
+        name: form.name || "Assinatura",
+        value,
+        dueDate: form.dueDate,
+        category: form.category || "assinatura",
+      });
+      toast("Assinatura adicionada.");
+    }
+
+    if (formType === "debt") {
+      appendItem("dividas", {
+        name: form.name || "Dívida",
+        value,
+        totalValue: Number(form.totalValue || 0),
+        interest: form.interest,
+        dueDate: form.dueDate,
+      });
+      toast("Dívida adicionada.");
+    }
+
+    setFormType(null);
+    setForm({});
+  };
+
+  const buildLocalAnswer = (q) => {
+    const lower = q.toLowerCase();
+    let focus = `Hoje, o maior peso está em ${maiorGrupo[0]}, com ${fmtBRL(maiorGrupo[1])}.`;
+    if (lower.includes("assinatura")) {
+      focus = `Suas assinaturas somam ${fmtBRL(assinaturas)}, o equivalente a ${fmtPct(renda > 0 ? (assinaturas / renda) * 100 : 0, 1)} da renda. Vale revisar uso real e recorrências duplicadas.`;
+    } else if (lower.includes("reserva")) {
+      focus = `Uma reserva educacional de 6 meses dos gastos essenciais ficaria em ${fmtBRL(reservaAlvo)}. Com meta de ${fmtBRL(state.meta)}, o prazo estimado seria ${mesesReserva || "indefinido"} meses.`;
+    } else if (lower.includes("acabou") || lower.includes("demais") || lower.includes("gastando")) {
+      focus = `${focus} Os gastos totais somam ${fmtBRL(totalGastos)} e comprometem ${fmtPct(comprometido, 1)} da renda.`;
+    }
+    return `${focus}\n\nSugestão educacional: comece revisando uma categoria por vez, defina um limite simples para a próxima semana e acompanhe se o saldo melhora. Esta resposta é educacional e não representa recomendação de investimento.`;
+  };
+
+  const askFinancialAi = async () => {
+    const q = question.trim();
+    if (!q) return;
+    setAsking(true);
+    try {
+      if (!userId) throw new Error("local fallback");
+      const result = await api.askRag(userId, q);
+      setAnswer(result.answer || result.summary || buildLocalAnswer(q));
+    } catch (e) {
+      setAnswer(buildLocalAnswer(q));
+    } finally {
+      setAsking(false);
+    }
+  };
 
   return (
     <div className="content client-viewer" data-testid="client-viewer">
       <div className="page-head">
-        <div className="eyebrow">Visão do Cliente</div>
-        <h1>Tio Patinhas — Visão do Cliente</h1>
-        <div className="sub">Resumo claro da sua vida financeira, com análise educacional.</div>
+        <div className="eyebrow">Área do Cliente</div>
+        <h1>Tio Patinhas</h1>
+        <div className="sub">Organize seu mês, entenda seus gastos e tire dúvidas financeiras de forma educacional.</div>
       </div>
 
-      <div className="client-card-grid">
-        <ClientMetric testId="client-income-card" label="Renda mensal" value={fmtBRL(renda)} />
-        <ClientMetric testId="client-expenses-card" label="Gastos totais" value={fmtBRL(totalGastos)} />
-        <ClientMetric testId="client-balance-card" label="Saldo estimado" value={fmtBRL(saldo)} tone={saldo >= 0 ? "good" : "bad"} />
-        <ClientMetric label="Comprometimento" value={fmtPct(comprometido, 1)} tone={comprometido > 90 ? "bad" : comprometido > 75 ? "warn" : "good"} />
+      <div className="client-tabs" role="tablist">
+        <button data-testid="client-tab-summary" className={tab === "summary" ? "active" : ""} onClick={() => setTab("summary")}>Resumo</button>
+        <button data-testid="client-tab-add" className={tab === "add" ? "active" : ""} onClick={() => setTab("add")}>Adicionar</button>
+        <button data-testid="client-tab-ai" className={tab === "ai" ? "active" : ""} onClick={() => setTab("ai")}>IA Financeira</button>
+        <button data-testid="client-tab-simulations" className={tab === "simulations" ? "active" : ""} onClick={() => setTab("simulations")}>Simulações</button>
       </div>
 
-      <div className="client-section">
-        <h2>Para onde seu dinheiro foi</h2>
-        <div className="client-breakdown">
-          <ClientBreakdown label="Gastos fixos" value={fixos} total={totalGastos} />
-          <ClientBreakdown label="Gastos variáveis" value={variaveis} total={totalGastos} />
-          <ClientBreakdown label="Assinaturas" value={assinaturas} total={totalGastos} />
-          <ClientBreakdown label="Dívidas" value={dividas} total={totalGastos} />
+      {tab === "summary" && (
+        <>
+          <ClientSummaryCards renda={renda} totalGastos={totalGastos} saldo={saldo} comprometido={comprometido} />
+
+          <div className="client-section">
+            <h2>Para onde seu dinheiro foi</h2>
+            <div className="client-breakdown">
+              <ClientBreakdown label="Gastos fixos" value={fixos} total={totalGastos} />
+              <ClientBreakdown label="Gastos variáveis" value={variaveis} total={totalGastos} />
+              <ClientBreakdown label="Assinaturas" value={assinaturas} total={totalGastos} />
+              <ClientBreakdown label="Dívidas" value={dividas} total={totalGastos} />
+            </div>
+          </div>
+
+          <div className="client-section" data-testid="client-diagnosis-section">
+            <h2>Diagnóstico principal</h2>
+            <div className="client-diagnosis">
+              <p>{diagnostico}</p>
+              <p><b>Ponto de atenção:</b> {maiorGrupo[0]} concentram {fmtBRL(maiorGrupo[1])} neste mês.</p>
+            </div>
+          </div>
+
+          <div className="client-section">
+            <h2>Próximas ações educacionais</h2>
+            <ol className="client-actions">
+              <li>Revisar a categoria de maior peso antes de novos gastos.</li>
+              <li>Definir um limite semanal para gastos variáveis.</li>
+              <li>Separar a meta mensal assim que a renda entrar.</li>
+            </ol>
+          </div>
+        </>
+      )}
+
+      {tab === "add" && (
+        <div className="client-section">
+          <h2>Adicionar movimentação</h2>
+          <div className="client-action-grid">
+            <button data-testid="client-add-income" className="client-action-btn" onClick={() => resetForm("income")}>Adicionar renda</button>
+            <button data-testid="client-add-expense" className="client-action-btn" onClick={() => resetForm("expense")}>Adicionar gasto</button>
+            <button data-testid="client-add-subscription" className="client-action-btn" onClick={() => resetForm("subscription")}>Adicionar assinatura</button>
+            <button data-testid="client-add-debt" className="client-action-btn" onClick={() => resetForm("debt")}>Adicionar dívida</button>
+          </div>
+          {formType && (
+            <ClientAddForm
+              formType={formType}
+              form={form}
+              updateForm={updateForm}
+              onSave={handleSaveItem}
+              onCancel={() => setFormType(null)}
+            />
+          )}
         </div>
-      </div>
+      )}
 
-      <div className="client-section" data-testid="client-diagnosis-section">
-        <h2>Diagnóstico</h2>
-        <div className="client-diagnosis">
-          <p><b>Perfil financeiro:</b> {comprometido > 75 ? "atenção à margem mensal" : "margem organizada"}</p>
-          <p><b>Diagnóstico principal:</b> {diagnostico}</p>
-          <p><b>Ponto forte:</b> seus dados estão organizados em categorias claras.</p>
-          <p><b>Ponto de atenção:</b> dívidas e gastos recorrentes devem ser acompanhados antes de qualquer decisão financeira maior.</p>
+      {tab === "ai" && (
+        <div className="client-section">
+          <h2>IA Financeira</h2>
+          <div className="client-suggestions">
+            {[
+              "Por que meu dinheiro acabou este mês?",
+              "Onde estou gastando demais?",
+              "Quais gastos posso revisar?",
+              "Minhas assinaturas estão pesando?",
+              "Quanto falta para minha reserva de emergência?",
+            ].map((item) => (
+              <button key={item} onClick={() => setQuestion(item)}>{item}</button>
+            ))}
+          </div>
+          <textarea
+            data-testid="client-ai-input"
+            className="client-ai-input"
+            placeholder="Digite sua dúvida financeira..."
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+          />
+          <button data-testid="client-ai-submit" className="btn btn-primary" onClick={askFinancialAi}>
+            {asking ? "Analisando..." : "Perguntar à IA"}
+          </button>
+          {answer && (
+            <div className="client-ai-answer" data-testid="client-ai-answer">
+              {answer.split("\n").map((line, i) => <p key={i}>{line}</p>)}
+            </div>
+          )}
         </div>
-      </div>
+      )}
 
-      <div className="client-section" data-testid="client-simulations-section">
-        <h2>Simulações principais</h2>
-        <div className="client-sim-grid">
-          <ClientSim title="Reserva de emergência" body={`Meta educacional de ${fmtBRL(reservaAlvo)} para cobrir 6 meses de gastos essenciais.`} />
-          <ClientSim title="Cenário de economia" body={`Revisões simples podem liberar cerca de ${fmtBRL(economiaPossivel)} por mês.`} />
-          <ClientSim title="Juros compostos educacionais" body={`Com aportes de ${fmtBRL(state.meta)}, acompanhe cenários sem tratar isso como promessa de rentabilidade.`} />
-          <ClientSim title="Impacto das dívidas" body={`As dívidas representam ${fmtPct(renda > 0 ? (dividas / renda) * 100 : 0, 1)} da renda mensal.`} />
-        </div>
-        {mesesReserva && (
-          <p className="muted" style={{fontSize: 13, marginTop: 12}}>
-            Com a meta atual, a reserva estimada levaria cerca de {mesesReserva} meses, sem considerar rentabilidade.
-          </p>
-        )}
-      </div>
-
-      <div className="client-section">
-        <h2>Próximas ações</h2>
-        <ol className="client-actions">
-          <li>Revisar os gastos variáveis da semana e definir um limite simples.</li>
-          <li>Conferir assinaturas recorrentes e manter apenas as que têm uso claro.</li>
-          <li>Separar a meta mensal antes de novos gastos não essenciais.</li>
-        </ol>
-      </div>
-
-      {apiNodes.length > 0 && (
-        <div className="client-saved">
-          Análise salva no Second Brain.
+      {tab === "simulations" && (
+        <div className="client-section" data-testid="client-simulations-section">
+          <h2>Simulações educacionais</h2>
+          <div className="client-sim-grid">
+            <ClientSim title="Reserva de emergência" body={`Meta educacional de ${fmtBRL(reservaAlvo)} para cobrir 6 meses de gastos essenciais.`} />
+            <ClientSim title="Economia mensal" body={`Com meta de ${fmtBRL(state.meta)}, em 12 meses o total guardado seria ${fmtBRL(state.meta * 12)}, sem considerar rentabilidade.`} />
+            <ClientSim title="Reduzindo variáveis" body={`Reduzir 15% dos gastos variáveis liberaria cerca de ${fmtBRL(variaveis * 0.15)} por mês.`} />
+            <ClientSim title="Impacto das dívidas" body={`As dívidas representam ${fmtPct(renda > 0 ? (dividas / renda) * 100 : 0, 1)} da renda mensal.`} />
+          </div>
+          {marketError ? (
+            <p className="muted" style={{marginTop: 12}}>{marketError}</p>
+          ) : marketData ? (
+            <div className="client-market">
+              <h3>Indicadores educacionais disponíveis</h3>
+              <span>Selic: {marketData.selic?.value ?? "indisponível"}</span>
+              <span>CDI: {marketData.cdi?.value ?? "indisponível"}</span>
+              <span>Poupança: {marketData.poupanca?.value ?? "indisponível"}</span>
+            </div>
+          ) : (
+            <p className="muted" style={{marginTop: 12}}>Carregando dados educacionais...</p>
+          )}
+          {mesesReserva && (
+            <p className="muted" style={{fontSize: 13, marginTop: 12}}>
+              Com a meta atual, a reserva estimada levaria cerca de {mesesReserva} meses, sem considerar rentabilidade.
+            </p>
+          )}
         </div>
       )}
 
@@ -547,6 +741,15 @@ const ClientViewer = ({ state, apiNodes = [] }) => {
     </div>
   );
 };
+
+const ClientSummaryCards = ({ renda, totalGastos, saldo, comprometido }) => (
+  <div className="client-card-grid">
+    <ClientMetric testId="client-income-card" label="Renda do mês" value={fmtBRL(renda)} />
+    <ClientMetric testId="client-expenses-card" label="Gastos totais" value={fmtBRL(totalGastos)} />
+    <ClientMetric testId="client-balance-card" label="Saldo estimado" value={fmtBRL(saldo)} tone={saldo >= 0 ? "good" : "bad"} />
+    <ClientMetric label="Comprometimento da renda" value={fmtPct(comprometido, 1)} tone={comprometido > 90 ? "bad" : comprometido > 75 ? "warn" : "good"} />
+  </div>
+);
 
 const ClientMetric = ({ label, value, tone, testId }) => (
   <div className={`client-metric ${tone || ""}`} data-testid={testId}>
@@ -573,6 +776,78 @@ const ClientSim = ({ title, body }) => (
     <h3>{title}</h3>
     <p>{body}</p>
   </div>
+);
+
+const ClientAddForm = ({ formType, form, updateForm, onSave, onCancel }) => {
+  const title = {
+    income: "Adicionar renda",
+    expense: "Adicionar gasto",
+    subscription: "Adicionar assinatura",
+    debt: "Adicionar dívida",
+  }[formType];
+
+  return (
+    <div className="client-form">
+      <h3>{title}</h3>
+
+      {formType === "income" && (
+        <>
+          <ClientField label="Descrição" value={form.description || ""} onChange={(v) => updateForm("description", v)} />
+          <ClientField label="Valor" type="number" value={form.value || ""} onChange={(v) => updateForm("value", v)} />
+          <ClientField label="Data" type="date" value={form.date || ""} onChange={(v) => updateForm("date", v)} />
+          <ClientField label="Categoria opcional" value={form.category || ""} onChange={(v) => updateForm("category", v)} />
+        </>
+      )}
+
+      {formType === "expense" && (
+        <>
+          <ClientField label="Descrição" value={form.description || ""} onChange={(v) => updateForm("description", v)} />
+          <ClientField label="Valor" type="number" value={form.value || ""} onChange={(v) => updateForm("value", v)} />
+          <label className="client-field">
+            <span>Categoria</span>
+            <select value={form.category || "variavel"} onChange={(e) => updateForm("category", e.target.value)}>
+              <option value="fixo">Fixo</option>
+              <option value="variavel">Variável</option>
+              <option value="assinatura">Assinatura</option>
+              <option value="divida">Dívida</option>
+            </select>
+          </label>
+          <ClientField label="Data" type="date" value={form.date || ""} onChange={(v) => updateForm("date", v)} />
+        </>
+      )}
+
+      {formType === "subscription" && (
+        <>
+          <ClientField label="Nome" value={form.name || ""} onChange={(v) => updateForm("name", v)} />
+          <ClientField label="Valor mensal" type="number" value={form.monthlyValue || ""} onChange={(v) => updateForm("monthlyValue", v)} />
+          <ClientField label="Data de vencimento" type="date" value={form.dueDate || ""} onChange={(v) => updateForm("dueDate", v)} />
+          <ClientField label="Categoria" value={form.category || ""} onChange={(v) => updateForm("category", v)} />
+        </>
+      )}
+
+      {formType === "debt" && (
+        <>
+          <ClientField label="Nome da dívida" value={form.name || ""} onChange={(v) => updateForm("name", v)} />
+          <ClientField label="Valor mensal" type="number" value={form.monthlyValue || ""} onChange={(v) => updateForm("monthlyValue", v)} />
+          <ClientField label="Valor total opcional" type="number" value={form.totalValue || ""} onChange={(v) => updateForm("totalValue", v)} />
+          <ClientField label="Juros opcional" value={form.interest || ""} onChange={(v) => updateForm("interest", v)} />
+          <ClientField label="Vencimento" type="date" value={form.dueDate || ""} onChange={(v) => updateForm("dueDate", v)} />
+        </>
+      )}
+
+      <div className="client-form-actions">
+        <button className="btn btn-ghost" onClick={onCancel}>Cancelar</button>
+        <button className="btn btn-primary" onClick={onSave}>Salvar</button>
+      </div>
+    </div>
+  );
+};
+
+const ClientField = ({ label, value, onChange, type = "text" }) => (
+  <label className="client-field">
+    <span>{label}</span>
+    <input type={type} value={value} onChange={(e) => onChange(e.target.value)} />
+  </label>
 );
 
 Object.assign(window, { PainelScreen, DashboardScreen, ClientViewer });

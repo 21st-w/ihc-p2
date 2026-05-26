@@ -184,7 +184,10 @@ function App() {
         {clientMode ? (
           <ClientViewer
             state={data}
+            setState={setData}
             apiNodes={apiNodes}
+            userId={userId}
+            toast={toast}
             onExit={() => setClientMode(false)}
           />
         ) : (

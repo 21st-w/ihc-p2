@@ -114,7 +114,30 @@ a {
   margin: 0 auto;
 }
 
+.client-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.client-tabs button {
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+.client-tabs button.active {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+}
+
 .client-card-grid,
+.client-action-grid,
 .client-sim-grid,
 .market-grid {
   display: grid;
@@ -131,6 +154,21 @@ a {
   border-radius: 8px;
   padding: 16px;
   box-shadow: var(--shadow-sm);
+}
+
+.client-action-btn {
+  background: var(--card-muted);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 14px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.client-action-btn:hover {
+  border-color: var(--border-strong);
+  background: #fff;
 }
 
 .client-metric .label,
@@ -215,6 +253,118 @@ a {
   margin: 0 0 6px;
 }
 
+.client-form {
+  margin-top: 16px;
+  background: var(--card-muted);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.client-form h3 {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 16px;
+}
+
+.client-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.client-field input,
+.client-field select,
+.client-ai-input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  padding: 10px 12px;
+  font-size: 14px;
+  outline: none;
+}
+
+.client-field input:focus,
+.client-field select:focus,
+.client-ai-input:focus {
+  border-color: var(--navy);
+}
+
+.client-form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.client-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.client-suggestions button {
+  border: 1px solid var(--border);
+  background: var(--card-muted);
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.client-ai-input {
+  min-height: 96px;
+  resize: vertical;
+  margin-bottom: 10px;
+}
+
+.client-ai-answer {
+  margin-top: 14px;
+  background: var(--green-soft);
+  border: 1px solid rgba(47, 122, 86, 0.18);
+  border-radius: 8px;
+  padding: 14px;
+  color: var(--green-ink);
+}
+
+.client-ai-answer p {
+  margin: 0 0 8px;
+}
+
+.client-market {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  background: var(--card-muted);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.client-market h3 {
+  width: 100%;
+  margin: 0;
+  font-size: 14px;
+}
+
+.client-market span {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
 .client-actions {
   margin: 0;
   padding-left: 20px;
@@ -234,14 +384,20 @@ a {
 
 @media (max-width: 900px) {
   .client-card-grid,
+  .client-action-grid,
   .client-sim-grid,
   .market-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .client-form {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 560px) {
   .client-card-grid,
+  .client-action-grid,
   .client-sim-grid,
   .market-grid {
     grid-template-columns: 1fr;

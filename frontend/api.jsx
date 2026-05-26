@@ -77,4 +77,14 @@ const api = {
     if (!res.ok) throw new Error(`getFundQuota failed: ${res.status}`);
     return res.json();
   },
+
+  async askRag(userId, question) {
+    const res = await fetch(`${API_BASE}/rag/ask/${userId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question }),
+    });
+    if (!res.ok) throw new Error(`askRag failed: ${res.status}`);
+    return res.json();
+  },
 };
