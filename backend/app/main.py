@@ -16,7 +16,7 @@ from app.models import User, FinancialProfile
 from app.schemas import FullAnalysisResponse, UserResponse, FinancialProfileResponse, NodeResponse
 from app.agents import freud, moriarty, athena
 from app.services.obsidian_service import salvar_nodo_obsidian, inicializar_vault
-from app.routers import users, finances, analyses, simulations, nodes
+from app.routers import users, finances, analyses, simulations, nodes, market_data
 
 # ── App ──────────────────────────────────────────────────
 
@@ -56,6 +56,7 @@ app.include_router(finances.router)
 app.include_router(analyses.router)
 app.include_router(simulations.router)
 app.include_router(nodes.router)
+app.include_router(market_data.router)
 
 
 # ── Root ─────────────────────────────────────────────────

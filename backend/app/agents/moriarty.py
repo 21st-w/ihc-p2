@@ -161,6 +161,169 @@ def simular_impacto_dividas(
     }
 
 
+def simular_renda_fixa_pos_fixada(
+    aporte_mensal: float,
+    meses: int,
+    percentual_cdi: float,
+    cdi_atual: dict[str, Any] | float,
+) -> dict[str, Any]:
+    """Simula renda fixa pos-fixada como exercicio educacional.
+
+    `cdi_atual` pode ser um dict do Market Data Service ou uma taxa anual
+    percentual informada manualmente.
+    """
+    if isinstance(cdi_atual, dict):
+        taxa_base = float(cdi_atual.get("value") or 0)
+        fonte = cdi_atual.get("source", "premissa educacional")
+        data = cdi_atual.get("date")
+    else:
+        taxa_base = float(cdi_atual or 0)
+        fonte = "premissa educacional manual"
+        data = None
+
+    taxa_anual = (taxa_base / 100) * (percentual_cdi / 100)
+    taxa_mensal = (1 + taxa_anual) ** (1 / 12) - 1 if taxa_anual > -1 else 0
+    saldo = 0.0
+    total_aportado = 0.0
+    for _ in range(max(meses, 0)):
+        saldo = saldo * (1 + taxa_mensal) + aporte_mensal
+        total_aportado += aporte_mensal
+
+    return {
+        "tipo": "simulacao_educacional",
+        "cenario": "Renda fixa pos-fixada",
+        "aporte_mensal": round(aporte_mensal, 2),
+        "meses": meses,
+        "percentual_cdi": round(percentual_cdi, 2),
+        "taxa_usada": round(taxa_anual, 6),
+        "fonte_taxa": fonte,
+        "data_taxa": data,
+        "valor_final_estimado": round(saldo, 2),
+        "total_aportado": round(total_aportado, 2),
+        "rendimento_estimado": round(saldo - total_aportado, 2),
+        "premissas": "Taxa constante durante todo o periodo, sem impostos, custos ou oscilacoes.",
+        "limitacoes": "Simulacao simplificada; nao garante resultados futuros.",
+        "aviso": "Simulacao educacional. Nao representa recomendacao de investimento.",
+    }
+
+
+def simular_poupanca(
+    aporte_mensal: float,
+    meses: int,
+    taxa_poupanca_mensal: dict[str, Any] | float,
+) -> dict[str, Any]:
+    """Simula acumulacao usando taxa mensal educacional da poupanca."""
+    if isinstance(taxa_poupanca_mensal, dict):
+        taxa = float(taxa_poupanca_mensal.get("value") or 0)
+        fonte = taxa_poupanca_mensal.get("source", "premissa educacional")
+        data = taxa_poupanca_mensal.get("date")
+    else:
+        taxa = float(taxa_poupanca_mensal or 0)
+        fonte = "premissa educacional manual"
+        data = None
+
+    saldo = 0.0
+    total_aportado = 0.0
+    for _ in range(max(meses, 0)):
+        saldo = saldo * (1 + taxa) + aporte_mensal
+        total_aportado += aporte_mensal
+
+    return {
+        "tipo": "simulacao_educacional",
+        "cenario": "Poupanca",
+        "aporte_mensal": round(aporte_mensal, 2),
+        "meses": meses,
+        "taxa_usada": round(taxa, 6),
+        "fonte_taxa": fonte,
+        "data_taxa": data,
+        "valor_final_estimado": round(saldo, 2),
+        "total_aportado": round(total_aportado, 2),
+        "rendimento_estimado": round(saldo - total_aportado, 2),
+        "premissas": "Taxa mensal constante, regra simplificada e sem impostos.",
+        "limitacoes": "Simulacao educacional simplificada; nao representa rentabilidade garantida.",
+        "aviso": "Simulacao educacional. Nao representa recomendacao de investimento.",
+    }
+
+
+def simular_inflacao(valor_atual: float, meses: int, ipca_estimado: dict[str, Any] | float) -> dict[str, Any]:
+    """Projeta perda de poder de compra por IPCA estimado."""
+    if isinstance(ipca_estimado, dict):
+        taxa_mensal = float(ipca_estimado.get("value") or 0) / 100
+        fonte = ipca_estimado.get("source", "premissa educacional")
+        data = ipca_estimado.get("date")
+    else:
+        taxa_mensal = float(ipca_estimado or 0) / 100
+        fonte = "premissa educacional manual"
+        data = None
+
+    valor_corrigido = valor_atual * ((1 + taxa_mensal) ** max(meses, 0))
+    return {
+        "tipo": "simulacao_educacional",
+        "cenario": "Inflacao",
+        "valor_atual": round(valor_atual, 2),
+        "meses": meses,
+        "taxa_usada": round(taxa_mensal, 6),
+        "fonte_taxa": fonte,
+        "data_taxa": data,
+        "valor_corrigido_estimado": round(valor_corrigido, 2),
+        "perda_poder_compra_estimado": round(valor_corrigido - valor_atual, 2),
+        "premissas": "IPCA mensal constante durante todo o periodo.",
+        "limitacoes": "Inflacao futura pode variar; simulacao nao e previsao.",
+        "aviso": "Simulacao educacional. Nao representa recomendacao de investimento.",
+    }
+
+
+def simular_cota_historica(valor_aporte: float, cota_inicial: float, cota_final: float) -> dict[str, Any]:
+    """Simula variacao historica de uma cota, sem recomendar o ativo."""
+    if cota_inicial <= 0:
+        quantidade_cotas = 0
+        valor_final = 0
+    else:
+        quantidade_cotas = valor_aporte / cota_inicial
+        valor_final = quantidade_cotas * cota_final
+
+    return {
+        "tipo": "simulacao_educacional",
+        "cenario": "Cota historica",
+        "valor_aporte": round(valor_aporte, 2),
+        "cota_inicial": round(cota_inicial, 6),
+        "cota_final": round(cota_final, 6),
+        "quantidade_cotas_simulada": round(quantidade_cotas, 6),
+        "valor_final_estimado": round(valor_final, 2),
+        "rendimento_estimado": round(valor_final - valor_aporte, 2),
+        "premissas": "Comparacao historica simples entre duas cotas.",
+        "limitacoes": "Cota historica nao garante resultados futuros e nao indica compra ou venda.",
+        "aviso": "Simulacao educacional. Nao representa recomendacao de investimento.",
+    }
+
+
+def simular_cenario_educacional_com_market_data(
+    aporte_mensal: float,
+    meses: int,
+    market_data: dict[str, Any],
+) -> dict[str, Any]:
+    """Agrupa simulacoes opcionais que usam dados externos padronizados."""
+    poupanca_data = market_data.get("poupanca")
+    ipca_data = market_data.get("ipca")
+    cdi_data = market_data.get("cdi")
+    return {
+        "tipo": "simulacao_educacional",
+        "poupanca": simular_poupanca(aporte_mensal, meses, poupanca_data) if poupanca_data else None,
+        "inflacao": simular_inflacao(aporte_mensal * meses, meses, ipca_data) if ipca_data else None,
+        "renda_fixa_pos_fixada": simular_renda_fixa_pos_fixada(aporte_mensal, meses, 100, cdi_data) if cdi_data else None,
+        "fontes": {
+            key: {
+                "source": value.get("source"),
+                "date": value.get("date"),
+                "educational_disclaimer": value.get("educational_disclaimer"),
+            }
+            for key, value in market_data.items()
+            if isinstance(value, dict)
+        },
+        "aviso": "Simulacoes educacionais. Nao representam recomendacao de investimento.",
+    }
+
+
 def simular_cenarios(
     monthly_income: float,
     fixed_expenses: float,

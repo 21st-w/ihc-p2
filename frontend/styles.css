@@ -93,6 +93,10 @@ a {
   min-height: 100vh;
 }
 
+.app.client-app {
+  grid-template-columns: 1fr;
+}
+
 .sidebar {
   background: var(--bg-elev);
   border-right: 1px solid var(--border);
@@ -103,6 +107,145 @@ a {
   position: sticky;
   top: 0;
   height: 100vh;
+}
+
+.client-viewer {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.client-card-grid,
+.client-sim-grid,
+.market-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.client-metric,
+.client-section,
+.client-saved,
+.market-item {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.client-metric .label,
+.market-label {
+  color: var(--ink-4);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.client-metric .value {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  letter-spacing: -0.3px;
+  margin-top: 4px;
+}
+
+.client-metric.good .value {
+  color: var(--green);
+}
+
+.client-metric.warn .value {
+  color: var(--gold);
+}
+
+.client-metric.bad .value {
+  color: var(--red);
+}
+
+.client-section {
+  margin-top: 16px;
+}
+
+.client-section h2 {
+  font-size: 18px;
+  font-family: var(--font-serif);
+  font-weight: 500;
+  margin: 0 0 12px;
+}
+
+.client-breakdown {
+  display: grid;
+  gap: 10px;
+}
+
+.client-break-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--divider);
+}
+
+.client-break-row:last-child {
+  border-bottom: 0;
+}
+
+.client-break-row span,
+.market-meta {
+  display: block;
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
+.client-diagnosis p,
+.client-sim p {
+  margin: 0 0 8px;
+  color: var(--ink-2);
+}
+
+.client-sim {
+  background: var(--card-muted);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.client-sim h3 {
+  font-size: 14px;
+  margin: 0 0 6px;
+}
+
+.client-actions {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--ink-2);
+}
+
+.client-saved {
+  margin-top: 16px;
+  color: var(--green-ink);
+  background: var(--green-soft);
+}
+
+.market-value {
+  font-size: 20px;
+  margin: 6px 0;
+}
+
+@media (max-width: 900px) {
+  .client-card-grid,
+  .client-sim-grid,
+  .market-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .client-card-grid,
+  .client-sim-grid,
+  .market-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .brand {

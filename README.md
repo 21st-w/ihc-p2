@@ -12,6 +12,92 @@ A ideia central é transformar os dados financeiros do usuário em conhecimento 
 
 ---
 
+## Escopo Educacional e Limites
+
+O Tio Patinhas **não é consultoria financeira, corretora, casa de análise ou recomendador de investimentos**. O MVP não recomenda ações, criptomoedas, fundos, FIIs, CDBs, Tesouro Direto, ETFs, BDRs ou qualquer ativo específico. Também não indica compra, venda, melhor ativo ou carteira recomendada.
+
+Todas as respostas e simulações devem ter finalidade:
+
+- educacional;
+- organizacional;
+- analítica;
+- comportamental;
+- simulativa.
+
+O sistema integra dados públicos e APIs financeiras para alimentar simulações educacionais. Indicadores macroeconômicos como Selic, IPCA, CDI e TR podem ser obtidos pelo Banco Central, enquanto cotações de ativos e dados históricos podem ser consultados por provedores como brapi.dev. Esses dados são usados apenas para cenários e simulações, sem recomendação de compra ou venda de ativos.
+
+---
+
+## Estado Atual do MVP
+
+O MVP usa:
+
+- **Backend:** FastAPI;
+- **Banco atual:** SQLite;
+- **Frontend:** React em `app.jsx`, consumindo `api.jsx`;
+- **Second Brain:** nodos Markdown em vault local inspirado no Obsidian;
+- **Fluxo principal preservado:** `POST /run-full-analysis/{user_id}`;
+- **Modo Cliente:** visualização limpa, sem detalhes técnicos, focada no usuário final;
+- **Dados de mercado:** endpoints `/market/...` com fallback controlado para simulações educacionais.
+
+APIs externas podem incluir:
+
+- Banco Central SGS;
+- CVM Dados Abertos;
+- brapi.dev;
+- yfinance como fallback/protótipo futuro;
+- Alpha Vantage se necessário.
+
+Tokens de provedores externos, como `BRAPI_TOKEN`, devem ficar em variáveis de ambiente e nunca no frontend.
+
+---
+
+## Agentes do Sistema
+
+O projeto mantém e documenta agentes especializados:
+
+- **Freud:** diagnóstico financeiro e comportamental;
+- **Moriarty:** cálculos, simulações e projeções matemáticas;
+- **Athena:** organização de nodos Markdown no Second Brain;
+- **Sherlock:** recuperação de contexto e RAG futuro sobre nodos do Obsidian;
+- **Supervisor:** roteamento de intenção, segurança educacional e privacidade.
+
+Os prompts oficiais ficam em `backend/app/prompts/`.
+
+---
+
+## Modo Cliente
+
+O Modo Cliente mostra apenas a visão essencial para o usuário final:
+
+- renda mensal;
+- gastos totais;
+- saldo estimado;
+- comprometimento da renda;
+- distribuição entre fixos, variáveis, assinaturas e dívidas;
+- diagnóstico educacional;
+- simulações principais;
+- próximas ações;
+- aviso educacional.
+
+Ele oculta detalhes internos como IDs, logs, eventos técnicos, estrutura do vault, caminhos de arquivo, RAG, embeddings, pgvector, APIs e implementação.
+
+---
+
+## Evolução para LLM/RAG
+
+O MVP está preparado para evoluir para LLM/RAG com:
+
+- Ollama como preferência futura de LLM local;
+- embeddings sobre nodos Markdown;
+- PostgreSQL + pgvector como evolução possível;
+- Sherlock como agente de recuperação;
+- Supervisor como roteador de segurança e intenção.
+
+Cálculos financeiros determinísticos continuam em Python. LLM deve ser usado apenas para linguagem natural, interpretação, contextualização e perguntas do usuário.
+
+---
+
 ## Problema
 
 Muitas pessoas possuem renda, cartões, Pix, bancos digitais, assinaturas, dívidas e objetivos financeiros, mas não têm clareza sobre sua real situação financeira.
@@ -119,7 +205,7 @@ Na visão completa do projeto, existem quatro agentes principais:
 - Athena;
 - Sherlock.
 
-No MVP, o Sherlock ficará em standby para reduzir complexidade técnica e evitar dependência de mercado em tempo real.
+O Supervisor fica documentado como camada de roteamento e segurança para a evolução multiagente. No MVP, Sherlock fica preparado como agente de recuperação de contexto sobre nodos Markdown, sem recomendação de investimentos.
 
 ---
 
@@ -193,27 +279,21 @@ Exemplo de atuação:
 
 ## Agente Sherlock
 
-O **Sherlock** é o agente de inteligência de mercado e contexto financeiro.
+O **Sherlock** é o agente de recuperação de contexto e investigação financeira.
 
-Na visão completa do projeto, ele será responsável por acompanhar informações externas sobre economia, mercado, investimentos e tendências.
+Na evolução do produto, ele buscará informações relevantes nos nodos Markdown do Second Brain, ranqueará os trechos por relevância e entregará contexto para Freud, Moriarty ou Athena. Quando houver RAG, toda resposta baseada em memória deverá mostrar os nodos usados como fonte.
 
 Responsabilidades futuras:
 
-- acompanhar notícias financeiras;
-- buscar literatura recente sobre economia e investimentos;
-- atualizar a base pública de conhecimento;
-- identificar tendências relevantes;
-- criar nodos de contexto econômico;
-- apoiar Moriarty com informações externas;
-- criar skills de análise de mercado.
+- buscar nodos relevantes do próprio usuário;
+- ranquear trechos por relevância;
+- diferenciar dados estruturados de memória textual;
+- informar quando não houver contexto suficiente;
+- proteger dados sensíveis;
+- apoiar Freud, Moriarty e Athena com contexto recuperado;
+- mostrar fontes sempre que uma resposta usar RAG.
 
-### Status no MVP
-
-No MVP, o Sherlock ficará em **standby**.
-
-Ele não será implementado inicialmente porque adiciona complexidade, custo, dependência de fontes externas, risco regulatório e necessidade de atualização constante.
-
-O MVP deve focar primeiro na vida financeira interna do usuário: renda, gastos, dívidas, assinaturas, perfil, simulações e Second Brain.
+Sherlock não recomenda ativos, não busca notícias para indicar investimentos e não mistura dados de usuários diferentes.
 
 ---
 
@@ -243,7 +323,7 @@ Exemplos:
 - Freud: perfil financeiro e comportamento do usuário;
 - Moriarty: fórmulas, cálculos e simulações;
 - Athena: organização dos nodos e estrutura do Second Brain;
-- Sherlock: contexto econômico e mercado.
+- Sherlock: recuperação de contexto e memória financeira.
 
 ### 3. Conhecimento do Cliente
 
@@ -364,7 +444,7 @@ Em versões futuras, o sistema poderá evoluir para:
 - integração real com Obsidian;
 - criação automática de nodos;
 - agentes mais autônomos;
-- Sherlock com atualização diária de contexto econômico;
+- Sherlock com recuperação semântica de contexto;
 - dashboards avançados;
 - relatórios mensais;
 - análise de assinaturas;

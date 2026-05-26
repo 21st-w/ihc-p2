@@ -452,4 +452,127 @@ const DashboardScreen = ({ state, go, openSave }) => {
   );
 };
 
-Object.assign(window, { PainelScreen, DashboardScreen });
+// ============================================
+// CLIENT VIEWER — visao limpa para usuario final
+// ============================================
+const ClientViewer = ({ state, apiNodes = [] }) => {
+  const sum = (arr) => arr.reduce((a, b) => a + (Number(b.value) || 0), 0);
+  const renda = sum(state.renda);
+  const fixos = sum(state.fixos);
+  const variaveis = sum(state.variaveis);
+  const assinaturas = sum(state.assinaturas);
+  const dividas = sum(state.dividas);
+  const totalGastos = fixos + variaveis + assinaturas + dividas;
+  const saldo = renda - totalGastos;
+  const comprometido = renda > 0 ? (totalGastos / renda) * 100 : 0;
+  const economiaPossivel = Math.max(Math.round((variaveis * 0.1 + assinaturas * 0.25) * 100) / 100, 0);
+  const reservaBase = fixos + dividas;
+  const reservaAlvo = reservaBase * 6;
+  const mesesReserva = state.meta > 0 ? Math.ceil(reservaAlvo / state.meta) : null;
+
+  const diagnostico = comprometido > 90
+    ? "Sua renda esta muito comprometida. O foco educacional deve ser recuperar margem antes de assumir novos compromissos."
+    : comprometido > 75
+      ? "Sua margem existe, mas esta apertada. O ponto principal e revisar gastos recorrentes e proteger sua reserva."
+      : "Sua situacao mostra margem para organizacao. O proximo passo e transformar a sobra em rotina e acompanhar desvios.";
+
+  return (
+    <div className="content client-viewer" data-testid="client-viewer">
+      <div className="page-head">
+        <div className="eyebrow">Visão do Cliente</div>
+        <h1>Tio Patinhas — Visão do Cliente</h1>
+        <div className="sub">Resumo claro da sua vida financeira, com análise educacional.</div>
+      </div>
+
+      <div className="client-card-grid">
+        <ClientMetric testId="client-income-card" label="Renda mensal" value={fmtBRL(renda)} />
+        <ClientMetric testId="client-expenses-card" label="Gastos totais" value={fmtBRL(totalGastos)} />
+        <ClientMetric testId="client-balance-card" label="Saldo estimado" value={fmtBRL(saldo)} tone={saldo >= 0 ? "good" : "bad"} />
+        <ClientMetric label="Comprometimento" value={fmtPct(comprometido, 1)} tone={comprometido > 90 ? "bad" : comprometido > 75 ? "warn" : "good"} />
+      </div>
+
+      <div className="client-section">
+        <h2>Para onde seu dinheiro foi</h2>
+        <div className="client-breakdown">
+          <ClientBreakdown label="Gastos fixos" value={fixos} total={totalGastos} />
+          <ClientBreakdown label="Gastos variáveis" value={variaveis} total={totalGastos} />
+          <ClientBreakdown label="Assinaturas" value={assinaturas} total={totalGastos} />
+          <ClientBreakdown label="Dívidas" value={dividas} total={totalGastos} />
+        </div>
+      </div>
+
+      <div className="client-section" data-testid="client-diagnosis-section">
+        <h2>Diagnóstico</h2>
+        <div className="client-diagnosis">
+          <p><b>Perfil financeiro:</b> {comprometido > 75 ? "atenção à margem mensal" : "margem organizada"}</p>
+          <p><b>Diagnóstico principal:</b> {diagnostico}</p>
+          <p><b>Ponto forte:</b> seus dados estão organizados em categorias claras.</p>
+          <p><b>Ponto de atenção:</b> dívidas e gastos recorrentes devem ser acompanhados antes de qualquer decisão financeira maior.</p>
+        </div>
+      </div>
+
+      <div className="client-section" data-testid="client-simulations-section">
+        <h2>Simulações principais</h2>
+        <div className="client-sim-grid">
+          <ClientSim title="Reserva de emergência" body={`Meta educacional de ${fmtBRL(reservaAlvo)} para cobrir 6 meses de gastos essenciais.`} />
+          <ClientSim title="Cenário de economia" body={`Revisões simples podem liberar cerca de ${fmtBRL(economiaPossivel)} por mês.`} />
+          <ClientSim title="Juros compostos educacionais" body={`Com aportes de ${fmtBRL(state.meta)}, acompanhe cenários sem tratar isso como promessa de rentabilidade.`} />
+          <ClientSim title="Impacto das dívidas" body={`As dívidas representam ${fmtPct(renda > 0 ? (dividas / renda) * 100 : 0, 1)} da renda mensal.`} />
+        </div>
+        {mesesReserva && (
+          <p className="muted" style={{fontSize: 13, marginTop: 12}}>
+            Com a meta atual, a reserva estimada levaria cerca de {mesesReserva} meses, sem considerar rentabilidade.
+          </p>
+        )}
+      </div>
+
+      <div className="client-section">
+        <h2>Próximas ações</h2>
+        <ol className="client-actions">
+          <li>Revisar os gastos variáveis da semana e definir um limite simples.</li>
+          <li>Conferir assinaturas recorrentes e manter apenas as que têm uso claro.</li>
+          <li>Separar a meta mensal antes de novos gastos não essenciais.</li>
+        </ol>
+      </div>
+
+      {apiNodes.length > 0 && (
+        <div className="client-saved">
+          Análise salva no Second Brain.
+        </div>
+      )}
+
+      <div data-testid="client-disclaimer">
+        <EducationalDisclaimer />
+      </div>
+    </div>
+  );
+};
+
+const ClientMetric = ({ label, value, tone, testId }) => (
+  <div className={`client-metric ${tone || ""}`} data-testid={testId}>
+    <div className="label">{label}</div>
+    <div className="value tnum">{value}</div>
+  </div>
+);
+
+const ClientBreakdown = ({ label, value, total }) => {
+  const pct = total > 0 ? (value / total) * 100 : 0;
+  return (
+    <div className="client-break-row">
+      <div>
+        <b>{label}</b>
+        <span>{fmtPct(pct, 1)} dos gastos</span>
+      </div>
+      <strong className="tnum">{fmtBRL(value)}</strong>
+    </div>
+  );
+};
+
+const ClientSim = ({ title, body }) => (
+  <div className="client-sim">
+    <h3>{title}</h3>
+    <p>{body}</p>
+  </div>
+);
+
+Object.assign(window, { PainelScreen, DashboardScreen, ClientViewer });

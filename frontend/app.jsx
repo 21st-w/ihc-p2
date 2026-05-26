@@ -86,6 +86,7 @@ function App() {
   const [userInfo, setUserInfo] = useState(null);
   const [apiNodes, setApiNodes] = useState([]);
   const [analyzing, setAnalyzing] = useState(false);
+  const [clientMode, setClientMode] = useState(false);
 
   const toast = (m) => setToastMsg(m);
 
@@ -171,21 +172,34 @@ function App() {
 
   // Stage: App
   return (
-    <div className="app">
-      <Sidebar page={page} setPage={setPage} onHome={() => setStage("landing")} />
+    <div className={clientMode ? "app client-app" : "app"}>
+      {!clientMode && <Sidebar page={page} setPage={setPage} onHome={() => setStage("landing")} />}
       <div className="main">
-        <Topbar page={page} setStage={setStage} />
-        <Pages
+        <Topbar
           page={page}
-          state={data}
-          setState={setData}
-          go={setPage}
-          onAnalyze={handleAnalyze}
-          openSave={() => setSaveModal(true)}
-          toast={toast}
-          apiNodes={apiNodes}
-          userId={userId}
+          setStage={setStage}
+          clientMode={clientMode}
+          setClientMode={setClientMode}
         />
+        {clientMode ? (
+          <ClientViewer
+            state={data}
+            apiNodes={apiNodes}
+            onExit={() => setClientMode(false)}
+          />
+        ) : (
+          <Pages
+            page={page}
+            state={data}
+            setState={setData}
+            go={setPage}
+            onAnalyze={handleAnalyze}
+            openSave={() => setSaveModal(true)}
+            toast={toast}
+            apiNodes={apiNodes}
+            userId={userId}
+          />
+        )}
       </div>
 
       <Toast message={toastMsg} onDone={() => setToastMsg("")} />
@@ -272,8 +286,8 @@ const Sidebar = ({ page, setPage, onHome }) => (
   </aside>
 );
 
-const Topbar = ({ page, setStage }) => {
-  const crumbs = CRUMBS[page] || [];
+const Topbar = ({ page, setStage, clientMode, setClientMode }) => {
+  const crumbs = clientMode ? ["Visão do Cliente"] : (CRUMBS[page] || []);
   return (
     <div className="topbar">
       <div className="crumbs">
@@ -290,6 +304,14 @@ const Topbar = ({ page, setStage }) => {
         <span className="dot"></span>
         Novembro 2025
       </span>
+      <button
+        className="btn btn-soft"
+        data-testid={clientMode ? "btn-full-mode" : "btn-client-mode"}
+        onClick={() => setClientMode(!clientMode)}
+      >
+        <Icon name="eye" size={14} />
+        {clientMode ? "Modo Completo" : "Modo Cliente"}
+      </button>
       <button className="btn btn-icon btn-soft" title="Buscar"><Icon name="search" size={14} /></button>
       <button className="btn btn-icon btn-soft" title="Notificações"><Icon name="bell" size={14} /></button>
     </div>

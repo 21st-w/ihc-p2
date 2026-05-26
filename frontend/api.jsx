@@ -41,4 +41,40 @@ const api = {
     if (!res.ok) throw new Error(`getNodes failed: ${res.status}`);
     return res.json();
   },
+
+  async getSelic() {
+    const res = await fetch(`${API_BASE}/market/selic`);
+    if (!res.ok) throw new Error(`getSelic failed: ${res.status}`);
+    return res.json();
+  },
+
+  async getIpca() {
+    const res = await fetch(`${API_BASE}/market/ipca`);
+    if (!res.ok) throw new Error(`getIpca failed: ${res.status}`);
+    return res.json();
+  },
+
+  async getPoupanca() {
+    const res = await fetch(`${API_BASE}/market/poupanca`);
+    if (!res.ok) throw new Error(`getPoupanca failed: ${res.status}`);
+    return res.json();
+  },
+
+  async getCdi() {
+    const res = await fetch(`${API_BASE}/market/cdi`);
+    if (!res.ok) throw new Error(`getCdi failed: ${res.status}`);
+    return res.json();
+  },
+
+  async getQuote(ticker) {
+    const res = await fetch(`${API_BASE}/market/quote/${encodeURIComponent(ticker)}`);
+    if (!res.ok) throw new Error(`getQuote failed: ${res.status}`);
+    return res.json();
+  },
+
+  async getFundQuota(cnpj) {
+    const res = await fetch(`${API_BASE}/market/fund/${encodeURIComponent(cnpj)}/quota`);
+    if (!res.ok) throw new Error(`getFundQuota failed: ${res.status}`);
+    return res.json();
+  },
 };

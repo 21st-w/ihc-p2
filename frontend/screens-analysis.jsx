@@ -1,7 +1,7 @@
 /* global React */
 // Tio Patinhas — Diagnóstico + Simulações + Aviso
 
-const { useState: useS_an, useMemo: useM_an } = React;
+const { useState: useS_an, useMemo: useM_an, useEffect: useE_an } = React;
 
 // ============================================
 // DIAGNÓSTICO — Screen 5
@@ -180,8 +180,28 @@ const SimulacoesScreen = ({ state, go, openSave }) => {
   // Juros
   const [taxaMensal, setTaxaMensal] = useS_an(0.7);
   const [prazo, setPrazo] = useS_an(24);
+  const [marketData, setMarketData] = useS_an(null);
+  const [marketError, setMarketError] = useS_an("");
   const i = taxaMensal / 100;
   const fv = aporte * ((Math.pow(1 + i, prazo) - 1) / (i || 1));
+
+  useE_an(() => {
+    let alive = true;
+    Promise.all([api.getSelic(), api.getCdi(), api.getIpca(), api.getPoupanca()])
+      .then(([selic, cdi, ipca, poupanca]) => {
+        if (!alive) return;
+        const items = { selic, cdi, ipca, poupanca };
+        const hasSuccess = Object.values(items).some((item) => item && item.success);
+        setMarketData(items);
+        setMarketError(hasSuccess ? "" : "Dados de mercado indisponíveis no momento. As simulações podem continuar usando premissas educacionais manuais.");
+      })
+      .catch(() => {
+        if (!alive) return;
+        setMarketData(null);
+        setMarketError("Dados de mercado indisponíveis no momento. As simulações podem continuar usando premissas educacionais manuais.");
+      });
+    return () => { alive = false; };
+  }, []);
 
   return (
     <div className="content">
@@ -307,8 +327,54 @@ const SimulacoesScreen = ({ state, go, openSave }) => {
         </div>
       </div>
 
+      <MarketDataPanel marketData={marketData} marketError={marketError} />
+
       <div style={{marginTop: 20, display: "flex", justifyContent: "space-between", alignItems: "center"}}>
         <EducationalDisclaimer />
+      </div>
+    </div>
+  );
+};
+
+const MarketDataPanel = ({ marketData, marketError }) => {
+  const rows = marketData ? [
+    ["Selic", marketData.selic],
+    ["CDI", marketData.cdi],
+    ["IPCA", marketData.ipca],
+    ["Poupança", marketData.poupanca],
+  ] : [];
+
+  return (
+    <div className="card" style={{marginTop: 18}}>
+      <div className="card-head">
+        <div className="lead">
+          <h3>Dados usados nas simulações</h3>
+          <div className="hint">Indicadores públicos para cenários educacionais. Não há ranking ou recomendação.</div>
+        </div>
+        <span className="tag navy">educacional</span>
+      </div>
+      <div className="card-body">
+        {marketError ? (
+          <div className="muted" style={{fontSize: 13}}>{marketError}</div>
+        ) : rows.length === 0 ? (
+          <div className="muted" style={{fontSize: 13}}>Carregando dados de mercado educacionais...</div>
+        ) : (
+          <div className="market-grid">
+            {rows.map(([label, item]) => (
+              <div key={label} className="market-item">
+                <div className="market-label">{label}</div>
+                <div className="market-value tnum">
+                  {item && item.value !== null && item.value !== undefined ? String(item.value).replace(".", ",") : "indisponível"}
+                </div>
+                <div className="market-meta">Fonte: {item?.source || "indisponível"}</div>
+                <div className="market-meta">Data: {item?.date || "indisponível"}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="card-foot" style={{fontSize: 12.5, color: "var(--ink-3)"}}>
+        Aviso educacional: dados externos alimentam apenas simulações e não representam recomendação de compra ou venda.
       </div>
     </div>
   );
