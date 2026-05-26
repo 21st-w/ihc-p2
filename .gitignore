@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Database
+*.db
+*.sqlite3
+
+# Obsidian vault – dados gerados por usuário em runtime
+obsidian-vault/usuarios/
+
+# Frontend artifacts
+frontend/tio patinhas.zip
+
+# OS
+.DS_Store
+Thumbs.db
