@@ -1,436 +1,386 @@
-# FinBrain
+# Tio Patinhas — Assistente Financeiro Educacional com IA e Second Brain
 
-> Laboratório financeiro pessoal com IA: organiza seus gastos, mede sua saúde financeira e simula cenários educacionais — sem recomendar investimentos.
+## Visão Geral
 
----
+O **Tio Patinhas** é um sistema educacional de organização financeira pessoal baseado em **Inteligência Artificial**, **Second Brain**, **agentes especializados** e **memória financeira personalizada**.
 
-## Visão do produto
+A proposta do projeto é ajudar o usuário a entender melhor sua vida financeira, organizar seus gastos, acompanhar assinaturas, visualizar dívidas, simular cenários e receber explicações personalizadas sobre sua situação financeira.
 
-O FinBrain ajuda profissionais brasileiros de classe média-alta a entender e melhorar sua vida financeira usando:
+O sistema não tem como objetivo recomendar compra ou venda de ativos financeiros. O foco é **educacional**, **analítico**, **organizacional** e **comportamental**.
 
-- cadastro de renda, gastos, assinaturas e dívidas;
-- diagnóstico em linguagem natural via agente **Sherlock**;
-- simulações educacionais de reserva de emergência e juros compostos;
-- chat com guardrails que responde dúvidas financeiras sem recomendar ativos;
-- avaliação de usabilidade como parte central do projeto IHC.
-
-### Hipótese central
-
-> "Brasileiros de classe média-alta endividados ou com sobra mensal inconsistente pagariam R$ X/mês por uma ferramenta que organiza finanças e simula cenários, desde que não recomende ativos."
-
-### Persona-âncora
-
-Profissional de 28–42 anos, renda R$ 8k–25k, tem app de banco mas não tem clareza sobre sobra real, já tentou planilha e desistiu, consome conteúdo de finanças mas não opera com método.
-
-### Métricas de sucesso (90 dias)
-
-| Métrica             | Definição                                                  |
-| ------------------- | ---------------------------------------------------------- |
-| **Ativação**        | % usuários que completam cadastro de gastos em ≤ 7 dias    |
-| **Retenção D30**    | % que voltam após 30 dias                                  |
-| **Aha moment**      | % que rodam ≥ 1 simulação após ver diagnóstico do Sherlock |
-| **NPS qualitativo** | Top-2-box ≥ 40%                                            |
+A ideia central é transformar os dados financeiros do usuário em conhecimento estruturado, permitindo que agentes de IA analisem, organizem e expliquem essas informações de forma simples, acessível e útil.
 
 ---
 
-## Escopo do MVP — Onda 0 (4–6 semanas)
+## Problema
 
-O MVP real são **3 fluxos**, não 8 features:
+Muitas pessoas possuem renda, cartões, Pix, bancos digitais, assinaturas, dívidas e objetivos financeiros, mas não têm clareza sobre sua real situação financeira.
 
-1. **Cadastro de gastos + diagnóstico do Sherlock.**
-2. **Simulação de 1 cenário** (reserva de emergência OU juros compostos — não os dois no dia 1).
-3. **Chat educacional** com guardrails que responde dúvidas financeiras.
+Mesmo com aplicativos bancários e planilhas, muitos usuários ainda não conseguem responder perguntas simples como:
 
-> Yuyu, Morpheus visível ao usuário, Obsidian como produto final, exportação PDF → **Fase 2.**
-> Morpheus existe internamente como orquestrador, mas não é feature exposta.
+- Para onde meu dinheiro está indo?
+- Quanto realmente sobra no fim do mês?
+- Quais gastos estão pesando mais?
+- Minhas assinaturas fazem sentido?
+- Minhas dívidas estão comprometendo minha renda?
+- Quanto tempo eu levaria para montar uma reserva de emergência?
+- Qual é meu perfil financeiro?
+- Que tipo de estratégia educacional combina com minha realidade?
 
-### Funcionalidades do MVP
-
-1. Auth + onboarding com aceite de termos registrado em log.
-2. Cadastro manual de renda, gastos fixos, variáveis, assinaturas, dívidas.
-3. Dashboard com sobra mensal, taxa de poupança, score de saúde financeira.
-4. **Sherlock**: diagnóstico de perfil em linguagem natural.
-5. **Benjamin (simplificado)**: simulador de reserva de emergência + juros compostos com aportes.
-6. **Athena**: guardrails determinísticos + LLM judge em 3 camadas.
-7. Chat educacional com tool calls determinísticas.
-8. Exportação básica (Markdown).
+O problema principal não é apenas a falta de dados. O problema é a falta de **interpretação**, **organização**, **clareza** e **orientação educacional**.
 
 ---
 
-## Roadmap em ondas
+## Objetivo do Projeto
 
-| Onda       | Prazo       | O que entra                                                                   |
-| ---------- | ----------- | ----------------------------------------------------------------------------- |
-| **Onda 0** | 4–6 semanas | Cadastro manual + Sherlock + 1 simulação + Athena + chat básico               |
-| **Onda 1** | +6 semanas  | Benjamin completo + Yuyu como widget de mercado                               |
-| **Onda 2** | +8 semanas  | Obsidian como UI, exportação completa, Open Finance (via parceiro autorizado) |
+O objetivo do **Tio Patinhas** é criar um sistema financeiro educacional com IA capaz de:
 
----
+- organizar dados financeiros pessoais;
+- analisar o perfil financeiro do usuário;
+- gerar diagnósticos simples e compreensíveis;
+- realizar simulações financeiras educacionais;
+- estruturar conhecimento em formato de Second Brain;
+- criar memória personalizada por usuário;
+- auxiliar o usuário na tomada de consciência financeira;
+- oferecer uma interface clara, acessível e orientada por princípios de IHC.
 
-## Arquitetura
+O sistema busca responder a uma necessidade central:
 
-```text
-frontend/
-  Next.js 15 (App Router) + TypeScript strict
-  Tailwind 4 + shadcn/ui
-  React Query (Tanstack) + Zod + react-hook-form
-  Recharts para visualizações
-  KaTeX para fórmulas matemáticas
-
-backend/
-  FastAPI (Python 3.12) + SQLAlchemy 2.0 + Alembic
-  app/
-    api/          → endpoints REST
-    core/         → config, deps, segurança
-    models/       → SQLAlchemy ORM
-    schemas/      → Pydantic schemas
-    services/     → regras de negócio
-    agents/       → Planner, Explicador, Sherlock, orquestrador
-    skills/       → funções financeiras determinísticas (sem LLM)
-    guardrails/   → Athena (3 camadas)
-    workers/      → tarefas RQ (jobs de mercado, eval)
-  prompts/        → prompts versionados por hash
-
-database/
-  PostgreSQL 16 + pgvector
-  corpus de conhecimento financeiro (~200 chunks curados)
-  memória por usuário
-
-cache/
-  Redis + RQ (filas e jobs)
-
-infra/
-  Docker Compose (dev)
-  Railway ou Fly.io (produção)
-  GitHub Actions (CI: lint, testes, eval, coverage gate)
-  Langfuse (observabilidade de LLM)
-  Promptfoo (eval contínua em CI)
-```
-
-### Stack de IA
-
-| Papel                              | Modelo                                           |
-| ---------------------------------- | ------------------------------------------------ |
-| Planner (decide qual skill chamar) | Claude Sonnet                                    |
-| Explicador (verbaliza resultado)   | Claude Sonnet                                    |
-| Classificação de gastos            | Claude Haiku                                     |
-| LLM judge (Athena camada 2)        | Claude Haiku                                     |
-| Embeddings                         | `text-embedding-3-small` ou `bge-m3` self-hosted |
-
-> **Regra fundamental:** cálculo financeiro **nunca** passa pelo LLM. Sempre por função determinística testada em `app/skills/`.
+> Ajudar o usuário a entender sua vida financeira de forma simples, visual e personalizada, sem depender de planilhas complexas ou recomendações financeiras arriscadas.
 
 ---
 
-## Agentes
+## Proposta de Valor
 
-| Agente         | Função                                                       | Fase     |
-| -------------- | ------------------------------------------------------------ | -------- |
-| **Sherlock**   | Diagnóstico de perfil financeiro em linguagem natural        | Onda 0   |
-| **Benjamin**   | Simulações educacionais (juros compostos, reserva, carteira) | Onda 0–1 |
-| **Athena**     | Guardrails: bloqueia recomendações, injeta disclaimers       | Onda 0   |
-| **Planner**    | Decide qual skill chamar com base no input do usuário        | Interno  |
-| **Explicador** | Verbaliza resultado da skill com guardrails                  | Interno  |
-| **Yuyu**       | Widget de mercado: Selic, IPCA, USD, Ibovespa                | Onda 1   |
-| **Morpheus**   | Orquestrador de agentes (interno, não exposto ao usuário)    | Interno  |
+O **Tio Patinhas** funciona como um laboratório financeiro pessoal.
 
-### Arquitetura de agentes (MVP)
+Ele permite que o usuário registre sua realidade financeira e receba análises educacionais feitas por agentes especializados.
 
-O MVP usa **2 agentes LLM reais + skills determinísticas** (funções Python puras):
+A proposta de valor é:
 
-```
-Input do usuário
-    ↓
-Planner (LLM) → decide skill a chamar + args
-    ↓
-Skill determinística (Python puro, sem LLM)
-    ↓
-Explicador (LLM) → verbaliza resultado
-    ↓
-Athena (guardrails 3 camadas)
-    ↓
-Resposta ao usuário + log em agent_logs
-```
+> Transformar dados financeiros pessoais em conhecimento organizado, explicações claras e simulações úteis para o usuário entender melhor sua própria vida financeira.
 
-### Athena — Guardrails em 3 camadas
-
-1. **Regex/keyword** (determinístico): bloqueia tickers, "compre", "venda", "vai subir", promessas de rentabilidade.
-2. **LLM judge (Haiku)**: avalia 5 dimensões (recomendação direta, promessa de rentabilidade, personalização excessiva, falta de disclaimer, ticker específico). Score > 6 bloqueia.
-3. **Disclaimer injection** (não desabilitável): toda resposta com dado financeiro recebe:
-   > ⚠️ Esta é uma simulação educacional baseada em premissas explícitas. Não é recomendação de investimento. Performance passada não garante futura.
+Diferente de um aplicativo comum de controle de gastos, o Tio Patinhas não se limita a mostrar números. Ele busca interpretar os dados, criar memória sobre o usuário e organizar esse conhecimento ao longo do tempo.
 
 ---
 
-## Skills determinísticas (`app/skills/financial.py`)
+## Público-Alvo
 
-Funções puras, tipadas com `Decimal`, cobertura de testes ≥ 95%:
+O público-alvo do projeto são pessoas que possuem renda recorrente, gastos variados e interesse em melhorar sua organização financeira, mas que não conseguem manter controle por planilhas ou aplicativos tradicionais.
 
-| Função                        | O que calcula                                    |
-| ----------------------------- | ------------------------------------------------ |
-| `juros_compostos_com_aportes` | FV, juros totais, aportes totais                 |
-| `equivalencia_taxas`          | a.m. ↔ a.a. ↔ CDI%                               |
-| `reserva_emergencia`          | Baseada em gastos essenciais (não renda)         |
-| `taxa_poupanca`               | Renda líquida vs. gastos totais                  |
-| `score_saude_financeira`      | Score 0–100 com breakdown por dimensão           |
-| `tributacao_renda_fixa`       | Alíquota regressiva, IR, retorno líquido         |
-| `tributacao_acoes_pf`         | Day trade, isenção até R$ 20k/mês                |
-| `simulacao_carteira`          | Retorno esperado, vol, Sharpe, drawdown estimado |
+Persona principal:
 
-> Usar `Decimal`, nunca `float`. Toda função com docstring de fórmula, premissas e exemplo numérico.
+- Profissional entre 20 e 40 anos;
+- Possui renda mensal, gastos fixos e variáveis;
+- Usa banco digital, cartão de crédito e Pix;
+- Tem dificuldade em entender quanto realmente sobra;
+- Já tentou usar planilhas, mas desistiu;
+- Quer melhorar sua organização financeira;
+- Tem interesse em investimentos, mas precisa primeiro entender sua própria base financeira;
+- Prefere explicações simples, visuais e personalizadas.
 
 ---
 
-## Modelo de dados
+## Conceito Central: Second Brain Financeiro
 
-```sql
-users           (id, email, perfil_aceite_em, ...)
-transactions    (id, user_id, data, valor, categoria, tipo, fonte)
-subscriptions   (id, user_id, nome, valor, recorrencia, ultima_cobranca)
-income_sources  (id, user_id, nome, valor_mensal, tipo)
-debts           (id, user_id, credor, saldo, taxa_aa, parcela)
-goals           (id, user_id, nome, valor_alvo, prazo)
-simulations     (id, user_id, tipo, inputs_json, outputs_json, criada_em)
-agent_logs      (id, user_id, agente, prompt, resposta, guardrail_status, criada_em)
-consents        (id, user_id, tipo, versao, aceito_em, ip)
-market_data     (id, indicador, valor, data_ref, stale)
-knowledge_chunks(id, titulo, topico, conteudo, embedding, tags)
-```
+A base conceitual do Tio Patinhas é o **Second Brain financeiro**.
 
-### Migrations Alembic (incrementais)
+O sistema não trata os dados do usuário apenas como registros isolados. Ele transforma esses dados em conhecimento estruturado.
 
-```
-001_users_and_auth
-002_consents_and_audit
-003_financial_entities
-004_simulations
-005_agent_logs
-006_market_data
-007_vector_extension
-```
+Cada usuário possui uma memória financeira organizada, contendo informações como:
+
+- renda;
+- gastos fixos;
+- gastos variáveis;
+- assinaturas;
+- dívidas;
+- objetivos;
+- perfil financeiro;
+- diagnósticos anteriores;
+- simulações realizadas;
+- resumos mensais;
+- observações comportamentais;
+- recomendações educacionais.
+
+Essa memória pode ser representada por nodos, pastas, registros no banco de dados ou uma estrutura inspirada no Obsidian.
+
+No MVP, a estrutura do Second Brain pode ser simulada no banco de dados ou em arquivos Markdown. Em versões futuras, poderá haver integração real com Obsidian, RAG, embeddings e pgvector.
 
 ---
 
-## Dados de mercado (APIs oficiais)
+## Arquitetura Conceitual dos Agentes
 
-| Indicador              | Fonte                    |
-| ---------------------- | ------------------------ |
-| Selic meta (cód. 432)  | BCB SGS API              |
-| IPCA (cód. 433)        | BCB SGS API              |
-| CDI (cód. 12)          | BCB SGS API              |
-| USD/BRL (cód. 1)       | BCB SGS API              |
-| Tesouro Direto         | Tesouro Transparente API |
-| Cotações B3 / Ibovespa | Brapi (free tier)        |
+O Tio Patinhas é baseado em uma arquitetura multiagente. Cada agente possui uma responsabilidade específica dentro do sistema.
 
-> Job diário às 19h BRT. Cache Redis 1h. Fallback com flag `stale` se API cair.
-> Widget no dashboard exibe apenas índices e indicadores macro — **nunca tickers individuais**.
+Na visão completa do projeto, existem quatro agentes principais:
 
----
+- Freud;
+- Moriarty;
+- Athena;
+- Sherlock.
 
-## Compliance e jurídico
-
-### Linha vermelha — nunca cruzar
-
-- Mencionar ticker específico como sugestão.
-- Prometer rentabilidade ("você vai render X%").
-- Personalizar simulação a ponto de virar conselho ("para você, com seu perfil, compre...").
-- Sugerir timing de mercado.
-
-### Documentos obrigatórios no MVP
-
-1. Termos de Uso com cláusula de **não-recomendação** em destaque.
-2. Política de Privacidade LGPD-compliant.
-3. Aviso pré-uso com aceite registrado em log.
-4. Política de cookies.
-5. Canal de atendimento ao titular de dados.
-6. Registro de operações de tratamento (ROPA).
-
-### Mitigantes técnicos
-
-- Watermark `SIMULAÇÃO EDUCACIONAL` em toda resposta com dado financeiro.
-- Log imutável de toda resposta do agente.
-- Versioning de prompts com hash para auditoria.
-- Disclaimer dinâmico injetado pela Athena (não opcional).
-- Endpoint de portabilidade e exclusão de dados (LGPD) desde o MVP.
-
-### Referências regulatórias
-
-- CVM Resolução 20/2021 (analistas de valores mobiliários).
-- CVM Resolução 19/2021 (consultores de valores mobiliários).
-- LGPD — dados financeiros tratados com rigor de dados sensíveis.
-- Open Finance: entrar como receptor exige autorização do Bacen ou parceria → **fora do MVP**. Usuário faz upload de CSV/OFX.
+No MVP, o Sherlock ficará em standby para reduzir complexidade técnica e evitar dependência de mercado em tempo real.
 
 ---
 
-## IHC — pontos de estudo
+## Agente Freud
 
-O desafio central não é técnico. É desenhar uma interface que ajude o usuário a **confiar, entender e controlar** agentes de IA.
+O **Freud** é o agente responsável por analisar o perfil financeiro e comportamental do usuário.
 
-- Clareza das respostas dos agentes.
-- Confirmação antes de alterar dados.
-- Explicabilidade das simulações (premissas explícitas).
-- Feedback de erro e incerteza.
-- Visualização de gastos, metas e score de saúde.
-- Bloqueio visível e explicado quando Athena age.
-- Relação entre chat, dashboard e diagnóstico.
-- Avaliação de usabilidade com usuários reais.
+Ele observa os dados cadastrados pelo usuário e gera interpretações sobre sua realidade financeira.
 
----
+Responsabilidades principais:
 
-## Como rodar
+- analisar renda, gastos, dívidas e objetivos;
+- identificar padrões de comportamento financeiro;
+- classificar o perfil financeiro do usuário;
+- gerar diagnósticos em linguagem natural;
+- criar contexto personalizado para os outros agentes;
+- acompanhar a evolução financeira do usuário;
+- gerar nodos específicos sobre o perfil do cliente.
 
-### Pré-requisitos
+Exemplo de atuação:
 
-- Docker e Docker Compose
-- Node.js 20+
-- Python 3.12+
-
-### Subir ambiente completo
-
-```bash
-make up
-```
-
-### Apenas backend
-
-```bash
-cd backend
-pip install -r requirements.txt
-alembic upgrade head
-uvicorn app.main:app --reload --port 8000
-```
-
-### Apenas frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Acesse `http://localhost:3000`.
-
-### Variáveis de ambiente (`.env.example`)
-
-```bash
-# Banco de dados
-POSTGRES_URL=postgresql://localhost:5432/finbrain
-REDIS_URL=redis://localhost:6379
-
-# Auth
-JWT_SECRET=<min 256 bits>
-CLERK_SECRET_KEY=
-
-# LLM
-ANTHROPIC_API_KEY=sk-ant-...
-
-# Observabilidade
-LANGFUSE_SECRET_KEY=
-LANGFUSE_PUBLIC_KEY=
-LANGFUSE_HOST=https://cloud.langfuse.com
-
-# APIs de mercado
-BRAPI_TOKEN=
-
-# Vault (Fase 2)
-VAULT_PATH=/absolute/path/to/vault
-```
+> “Seu maior peso financeiro está nos gastos fixos e nas assinaturas. Antes de pensar em investir, o ideal é entender sua sobra mensal real e reduzir despesas recorrentes de baixo valor percebido.”
 
 ---
 
-## Testes e avaliação
+## Agente Moriarty
 
-```bash
-# Testes unitários + integração
-cd backend && pytest
+O **Moriarty** é o agente matemático e quantitativo do sistema.
 
-# Com cobertura
-pytest --cov=app --cov-report=term-missing
+Ele é responsável por cálculos, simulações, projeções e análises financeiras baseadas em números.
 
-# Eval de guardrails (50 casos adversariais)
-pytest tests/guardrails/
+Responsabilidades principais:
 
-# Eval contínua (Promptfoo — roda em CI)
-promptfoo eval
-```
+- calcular saldo mensal estimado;
+- calcular comprometimento da renda;
+- simular reserva de emergência;
+- projetar juros compostos;
+- analisar impacto de dívidas;
+- simular redução de gastos;
+- gerar cenários educacionais;
+- apoiar as análises de Freud com dados quantitativos.
 
-### Gates de cobertura (CI bloqueia PR se cair)
+Exemplo de atuação:
 
-| Módulo            | Cobertura mínima |
-| ----------------- | ---------------- |
-| `app/skills/`     | ≥ 95%            |
-| `app/guardrails/` | ≥ 90%            |
-| `app/agents/`     | ≥ 75%            |
-| Global            | ≥ 85%            |
+> “Se você economizar R$ 300 por mês, levará aproximadamente 20 meses para formar uma reserva de emergência de R$ 6.000, sem considerar rentabilidade.”
 
 ---
 
-## Makefile
+## Agente Athena
 
-```bash
-make up        # sobe Docker Compose
-make down      # derruba
-make migrate   # alembic upgrade head
-make test      # pytest
-make lint      # ruff + mypy strict
-make format    # ruff format
-make seed      # seed de dev (nunca em produção)
-```
+A **Athena** é a agente responsável pela organização do conhecimento.
 
----
+Ela cuida da estrutura do Second Brain, dos nodos, das skills e da separação entre conhecimento público, conhecimento dos agentes e conhecimento do usuário.
 
-## Organização de prompts no repositório
+Responsabilidades principais:
 
-Todos os prompts dos agentes são versionados:
+- organizar nodos financeiros;
+- estruturar a memória do usuário;
+- separar conhecimento público e privado;
+- revisar informações criadas pelos agentes;
+- manter a base de conhecimento limpa;
+- sugerir novas skills;
+- organizar dados para uso futuro;
+- evitar duplicidade e desorganização no sistema.
 
-```text
-prompts/
-  claude-code/
-    01-setup-backend.md
-    02-skills-financeiras.md
-    03-orquestracao-agentes.md
-    04-athena-guardrails.md
-    05-sherlock.md
-  antigravity/
-    01-frontend-setup.md
-    02-dashboard.md
-    03-chat.md
-    04-mercado-yuyu.md
-    05-testes-e2e.md
-  codex/
-    01-suite-testes.md
-    02-scripts-utilitarios.md
-    03-documentacao.md
-    04-migrations-seeds.md
-  gemini/
-    01-corpus-conhecimento.md
-    02-eval-dataset.md
-    03-parsing-extratos.md
-    04-resumo-mercado.md
-    05-llm-judge-offline.md
-```
+Exemplo de atuação:
 
-Cada prompt carregado com hash para rastreabilidade em `agent_logs`.
+> “Foi criado um nodo de diagnóstico mensal para o usuário, contendo resumo de renda, gastos, assinaturas, dívidas e principais pontos de atenção.”
 
 ---
 
-## Decisões de arquitetura
+## Agente Sherlock
 
-- **B2C primeiro** — é onde IHC, agentes e produto são validados.
-- **LLM só onde linguagem natural é insubstituível** — cálculo financeiro sempre em função Python pura.
-- **2 agentes LLM + skills determinísticas** — não 5 agentes em LangGraph (overkill para MVP).
-- **Postgres + pgvector** — memória de usuário e RAG no mesmo banco.
-- **~200 chunks curados manualmente** — mais qualidade que indexar 50 livros.
-- **Eval set de 50 casos adversariais** antes do primeiro usuário real.
-- **Langfuse desde o dia 1** — observabilidade de custo e qualidade por conversa.
-- **Custo por interação logado** — prepara o módulo Enterprise futuro.
-- **Open Finance fora do MVP** — usuário faz upload de CSV/OFX.
-- **Obsidian como produto** — Fase 2, não MVP.
+O **Sherlock** é o agente de inteligência de mercado e contexto financeiro.
+
+Na visão completa do projeto, ele será responsável por acompanhar informações externas sobre economia, mercado, investimentos e tendências.
+
+Responsabilidades futuras:
+
+- acompanhar notícias financeiras;
+- buscar literatura recente sobre economia e investimentos;
+- atualizar a base pública de conhecimento;
+- identificar tendências relevantes;
+- criar nodos de contexto econômico;
+- apoiar Moriarty com informações externas;
+- criar skills de análise de mercado.
+
+### Status no MVP
+
+No MVP, o Sherlock ficará em **standby**.
+
+Ele não será implementado inicialmente porque adiciona complexidade, custo, dependência de fontes externas, risco regulatório e necessidade de atualização constante.
+
+O MVP deve focar primeiro na vida financeira interna do usuário: renda, gastos, dívidas, assinaturas, perfil, simulações e Second Brain.
 
 ---
 
-## Autor
+## Organização do Conhecimento
 
-Felipe Murilo Ribeiro Ribeiro - 21st-w
+O sistema deve separar o conhecimento em diferentes camadas:
 
-## Licença
+### 1. Conhecimento Público
 
-MIT License
+Base acessível por todos os agentes.
+
+Pode conter:
+
+- conceitos de educação financeira;
+- explicações sobre orçamento;
+- conceitos de juros compostos;
+- conceitos de reserva de emergência;
+- noções de risco;
+- conteúdos gerais sobre organização financeira.
+
+### 2. Conhecimento Especializado dos Agentes
+
+Cada agente possui sua própria base de conhecimento.
+
+Exemplos:
+
+- Freud: perfil financeiro e comportamento do usuário;
+- Moriarty: fórmulas, cálculos e simulações;
+- Athena: organização dos nodos e estrutura do Second Brain;
+- Sherlock: contexto econômico e mercado.
+
+### 3. Conhecimento do Cliente
+
+Cada usuário possui uma área própria de memória.
+
+Essa área deve armazenar:
+
+- dados financeiros;
+- diagnósticos;
+- objetivos;
+- simulações;
+- histórico;
+- preferências;
+- perfil financeiro;
+- resumos mensais.
+
+### 4. Curadoria do Conhecimento
+
+A Athena pode reorganizar o conhecimento quando necessário.
+
+Ela pode:
+
+- mover informações relevantes para a base pública;
+- duplicar conhecimento essencial para outro agente;
+- corrigir organização de nodos;
+- sugerir novas skills;
+- separar dados sensíveis do usuário;
+- manter a estrutura escalável.
+
+---
+
+## Princípios de IHC
+
+O Tio Patinhas tem foco forte em IHC, pois o usuário precisa entender dados financeiros sem se sentir confuso, intimidado ou sobrecarregado.
+
+Princípios adotados:
+
+- simplicidade visual;
+- linguagem clara;
+- baixa carga cognitiva;
+- navegação objetiva;
+- feedback imediato;
+- organização por prioridade;
+- acessibilidade;
+- consistência entre telas;
+- foco nas tarefas principais;
+- uso de gráficos apenas quando ajudarem na compreensão.
+
+O sistema deve evitar excesso de informações na tela. A interface deve priorizar clareza e tomada de consciência.
+
+---
+
+## Acessibilidade
+
+O MVP deve contemplar acessibilidade desde o início.
+
+Diretrizes iniciais:
+
+- bom contraste entre texto e fundo;
+- textos legíveis;
+- botões claros;
+- feedback visual para ações;
+- campos de formulário bem identificados;
+- linguagem simples;
+- navegação previsível;
+- suporte a usuários com dificuldade visual leve;
+- evitar dependência exclusiva de cores para transmitir informação.
+
+---
+
+## Segurança e Privacidade
+
+Como o sistema lida com dados financeiros pessoais, segurança e privacidade são elementos essenciais.
+
+Diretrizes iniciais:
+
+- separar dados por usuário;
+- não expor informações financeiras sensíveis;
+- evitar compartilhamento indevido entre clientes;
+- proteger dados no banco;
+- validar entradas do usuário;
+- manter regras claras de acesso;
+- não gerar recomendações financeiras diretas;
+- deixar claro que as análises possuem finalidade educacional.
+
+---
+
+## Limitação Importante
+
+O Tio Patinhas não é uma corretora, consultoria financeira, casa de análise ou recomendador de investimentos.
+
+O sistema não deve dizer ao usuário:
+
+- compre este ativo;
+- venda este ativo;
+- invista obrigatoriamente neste produto;
+- esta é a melhor ação;
+- esta é a melhor carteira.
+
+O sistema deve atuar como ferramenta educacional, oferecendo:
+
+- explicações;
+- diagnósticos;
+- simulações;
+- cenários;
+- alertas;
+- organização;
+- apoio à consciência financeira.
+
+---
+
+## Visão de Futuro
+
+Em versões futuras, o sistema poderá evoluir para:
+
+- integração com Open Finance;
+- importação automática de transações;
+- integração real com Obsidian;
+- criação automática de nodos;
+- agentes mais autônomos;
+- Sherlock com atualização diária de contexto econômico;
+- dashboards avançados;
+- relatórios mensais;
+- análise de assinaturas;
+- alertas inteligentes;
+- busca semântica com embeddings;
+- RAG com pgvector;
+- personalização avançada por usuário;
+- sistema de skills para agentes;
+- análise de documentos financeiros.
+
+---
+
+## Status do Projeto
+
+Este repositório será reorganizado para separar a visão completa do produto da implementação inicial do MVP.
+
+A branch principal mantém a visão geral do projeto.
+
+A branch `mvp` deve conter a versão mínima funcional, com foco em simplicidade, IHC, agentes essenciais e validação acadêmica do conceito.
