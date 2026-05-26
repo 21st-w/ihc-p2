@@ -87,4 +87,28 @@ const api = {
     if (!res.ok) throw new Error(`askRag failed: ${res.status}`);
     return res.json();
   },
+
+  async getAIStatus() {
+    const res = await fetch(`${API_BASE}/ai/status`);
+    if (!res.ok) throw new Error(`getAIStatus failed: ${res.status}`);
+    return res.json();
+  },
+
+  async askAI(userId, question) {
+    const res = await fetch(`${API_BASE}/ai/chat/${userId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question }),
+    });
+    if (!res.ok) throw new Error(`askAI failed: ${res.status}`);
+    return res.json();
+  },
+
+  async reindexAI(userId) {
+    const res = await fetch(`${API_BASE}/ai/reindex/${userId}`, {
+      method: "POST",
+    });
+    if (!res.ok) throw new Error(`reindexAI failed: ${res.status}`);
+    return res.json();
+  },
 };

@@ -98,6 +98,33 @@ Cálculos financeiros determinísticos continuam em Python. LLM deve ser usado a
 
 ---
 
+## Camada de IA na branch AI
+
+A branch `ai` implementa uma camada local de IA usando Ollama, sem remover o MVP determinístico.
+
+Ela adiciona:
+
+- LLM local via Ollama;
+- RAG simples sobre nodos do Obsidian;
+- embeddings locais gerados pelo Ollama;
+- armazenamento de chunks e embeddings em SQLite;
+- busca semântica por similaridade de cosseno em Python;
+- respostas com fontes recuperadas quando disponíveis;
+- guardrails contra recomendação de investimentos;
+- fallback determinístico quando a IA ou o Ollama falham.
+
+A camada de IA é usada apenas para interpretação, explicação educacional e recuperação de contexto dos nodos do usuário. Cálculos financeiros continuam sendo realizados por funções determinísticas em Python.
+
+Endpoints principais:
+
+- `GET /ai/status`;
+- `POST /ai/chat/{user_id}`;
+- `POST /ai/reindex/{user_id}`;
+- `POST /ai/index-node/{node_id}`;
+- `POST /ai/freud/analyze/{user_id}`.
+
+---
+
 ## Problema
 
 Muitas pessoas possuem renda, cartões, Pix, bancos digitais, assinaturas, dívidas e objetivos financeiros, mas não têm clareza sobre sua real situação financeira.

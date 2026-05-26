@@ -16,7 +16,7 @@ from app.models import User, FinancialProfile
 from app.schemas import FullAnalysisResponse, UserResponse, FinancialProfileResponse, NodeResponse
 from app.agents import freud, moriarty, athena
 from app.services.obsidian_service import salvar_nodo_obsidian, inicializar_vault
-from app.routers import users, finances, analyses, simulations, nodes, market_data
+from app.routers import users, finances, analyses, simulations, nodes, market_data, ai
 
 # ── App ──────────────────────────────────────────────────
 
@@ -57,6 +57,7 @@ app.include_router(analyses.router)
 app.include_router(simulations.router)
 app.include_router(nodes.router)
 app.include_router(market_data.router)
+app.include_router(ai.router)
 
 
 # ── Root ─────────────────────────────────────────────────
@@ -79,6 +80,12 @@ def root():
             "Este sistema possui finalidade exclusivamente educacional. "
             "Não é recomendação de investimento."
         ),
+        "ia": {
+            "status": "preparada",
+            "llm": "Ollama",
+            "rag": "SQLite embeddings",
+            "aviso": "Camada de IA educacional, sem recomendação de investimentos.",
+        },
     }
 
 
@@ -179,6 +186,20 @@ def executar_analise_completa(user_id: int, db: Session = Depends(get_db)):
 
     db.commit()
 
+    ai_indexing = {
+        "attempted": True,
+        "indexed_chunks": 0,
+        "error": None,
+    }
+    try:
+        from app.services.vector_store_service import index_node
+
+        for node in nodes_criados:
+            db.refresh(node)
+            ai_indexing["indexed_chunks"] += index_node(db, user_id, node)
+    except Exception as exc:
+        ai_indexing["error"] = str(exc)
+
     return {
         "status": "sucesso",
         "mensagem": "Análise completa executada com sucesso!",
@@ -187,6 +208,7 @@ def executar_analise_completa(user_id: int, db: Session = Depends(get_db)):
         "simulacoes_moriarty": simulacoes,
         "nodos_athena": [{"title": n["title"], "type": n["type"], "agent": n["agent"]} for n in nodos_data],
         "obsidian_files": obsidian_files,
+        "ai_indexing": ai_indexing,
         "aviso": (
             "⚠️ Todas as análises possuem finalidade exclusivamente educacional. "
             "Não representam recomendação de investimento."

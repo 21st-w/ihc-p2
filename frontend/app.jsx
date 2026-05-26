@@ -48,6 +48,7 @@ const NAV = [
     { id: "simulacoes",  label: "Simulações",  icon: "sim"       },
   ]},
   { group: "Conhecimento", items: [
+    { id: "ia",        label: "IA Financeira", icon: "spark"    },
     { id: "vault",     label: "Second Brain", icon: "brain"    },
     { id: "skills",    label: "Skills",       icon: "skill"    },
     { id: "eventos",   label: "Eventos",      icon: "events"   },
@@ -64,6 +65,7 @@ const CRUMBS = {
   dashboard:   ["Workspace", "Dashboard"],
   diagnostico: ["Análise", "Diagnóstico"],
   simulacoes:  ["Análise", "Simulações"],
+  ia:          ["Conhecimento", "IA Financeira"],
   vault:       ["Conhecimento", "Second Brain"],
   skills:      ["Conhecimento", "Skills"],
   eventos:     ["Conhecimento", "Eventos"],
@@ -327,6 +329,7 @@ const Pages = ({ page, state, setState, go, onAnalyze, openSave, toast, apiNodes
     case "dashboard":   return <DashboardScreen state={state} go={go} openSave={openSave} />;
     case "diagnostico": return <DiagnosticoScreen state={state} go={go} openSave={openSave} />;
     case "simulacoes":  return <SimulacoesScreen state={state} go={go} openSave={openSave} />;
+    case "ia":          return <AIFinanceiraScreen state={state} userId={userId} toast={toast} />;
     case "vault":       return <VaultScreen go={go} toast={toast} apiNodes={apiNodes} userId={userId} />;
     case "skills":      return <SkillsScreen go={go} toast={toast} />;
     case "eventos":     return <EventosScreen go={go} />;
@@ -335,6 +338,212 @@ const Pages = ({ page, state, setState, go, onAnalyze, openSave, toast, apiNodes
     case "mobile":      return <MobileScreen />;
     default:            return <PainelScreen state={state} setState={setState} onAnalyze={onAnalyze} />;
   }
+};
+
+const AI_SUGGESTED_QUESTIONS = [
+  "Por que meu dinheiro acabou este mês?",
+  "Onde estou gastando demais?",
+  "Minhas assinaturas estão pesando?",
+  "Quanto falta para minha reserva de emergência?",
+  "Quais gastos posso revisar?",
+  "O que meus nodos dizem sobre meu perfil financeiro?",
+];
+
+const buildLocalAIResponse = (state) => {
+  const sum = (arr) => arr.reduce((acc, item) => acc + (Number(item.value) || 0), 0);
+  const categories = [
+    { name: "gastos fixos", value: sum(state.fixos) },
+    { name: "gastos variáveis", value: sum(state.variaveis) },
+    { name: "assinaturas", value: sum(state.assinaturas) },
+    { name: "dívidas", value: sum(state.dividas) },
+  ];
+  const renda = sum(state.renda);
+  const total = categories.reduce((acc, item) => acc + item.value, 0);
+  const saldo = renda - total;
+  const maior = categories.reduce((max, item) => item.value > max.value ? item : max, categories[0]);
+  return (
+    `Com base nos dados preenchidos, sua renda estimada é ${fmtBRL(renda)}, seus gastos totais são ${fmtBRL(total)} ` +
+    `e seu saldo é ${fmtBRL(saldo)}. A maior categoria de gasto parece ser ${maior.name}, com ${fmtBRL(maior.value)}. ` +
+    "A IA está indisponível no momento, então esta é uma análise local simplificada.\n\n" +
+    "Análise educacional. Não representa recomendação de investimento."
+  );
+};
+
+const AIFinanceiraScreen = ({ state, userId, toast }) => {
+  const [status, setStatus] = useState(null);
+  const [question, setQuestion] = useState(AI_SUGGESTED_QUESTIONS[0]);
+  const [answer, setAnswer] = useState("");
+  const [sources, setSources] = useState([]);
+  const [disclaimer, setDisclaimer] = useState("Análise educacional. Não representa recomendação de investimento.");
+  const [loading, setLoading] = useState(false);
+  const [reindexing, setReindexing] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    api.getAIStatus()
+      .then((data) => { if (alive) setStatus(data); })
+      .catch(() => {
+        if (alive) setStatus({ ai_enabled: false, ollama_available: false, message: "IA indisponível no momento." });
+      });
+    return () => { alive = false; };
+  }, []);
+
+  const ask = async (nextQuestion) => {
+    const finalQuestion = (nextQuestion || question || "").trim();
+    if (!finalQuestion) return;
+    setQuestion(finalQuestion);
+    setSources([]);
+    if (!userId) {
+      setAnswer("Crie ou selecione um usuário para usar a IA com dados personalizados.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const result = await api.askAI(userId, finalQuestion);
+      setAnswer(result.answer || "");
+      setSources(result.sources || []);
+      setDisclaimer(result.educational_disclaimer || "Análise educacional. Não representa recomendação de investimento.");
+    } catch (e) {
+      setAnswer(buildLocalAIResponse(state));
+      setSources([]);
+      setDisclaimer("Análise educacional. Não representa recomendação de investimento.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const reindex = async () => {
+    if (!userId) {
+      setAnswer("Crie ou selecione um usuário para indexar seus nodos.");
+      return;
+    }
+    setReindexing(true);
+    try {
+      const result = await api.reindexAI(userId);
+      toast(result.message || "Nodos reindexados para IA.");
+    } catch (e) {
+      toast("A IA está indisponível no momento. Você ainda pode usar o diagnóstico local e as simulações determinísticas.");
+    } finally {
+      setReindexing(false);
+    }
+  };
+
+  return (
+    <div className="content">
+      <div className="page-head" style={{flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end"}}>
+        <div>
+          <div className="eyebrow">IA Financeira</div>
+          <h1>Converse com a IA educacional</h1>
+          <div className="sub">Pergunte sobre seu orçamento, diagnósticos, simulações e nodos do Second Brain.</div>
+        </div>
+        <button className="btn btn-soft" data-testid="ai-reindex" onClick={reindex} disabled={reindexing}>
+          <Icon name="brain" size={14} />
+          {reindexing ? "Indexando..." : "Reindexar nodos"}
+        </button>
+      </div>
+
+      <div className="card" style={{marginBottom: 16}}>
+        <div className="card-body" data-testid="ai-status" style={{display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap"}}>
+          <span className={`tag ${status && status.ollama_available ? "green" : "gold"}`}>
+            {status && status.ollama_available ? "Ollama online" : "Fallback local ativo"}
+          </span>
+          <span className="muted" style={{fontSize: 13}}>
+            {status ? status.message : "Verificando status da IA..."}
+          </span>
+        </div>
+      </div>
+
+      <div style={{display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 18}}>
+        <div className="card">
+          <div className="card-head">
+            <div className="lead">
+              <h3>Pergunta</h3>
+              <div className="hint">A resposta é educacional e usa seus dados quando há usuário selecionado.</div>
+            </div>
+          </div>
+          <div className="card-body">
+            <textarea
+              className="input"
+              data-testid="ai-question-input"
+              rows="4"
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              placeholder="Digite sua pergunta financeira educacional"
+              style={{width: "100%", resize: "vertical", lineHeight: 1.5}}
+            />
+            <div style={{display: "flex", gap: 10, marginTop: 12, alignItems: "center"}}>
+              <button className="btn btn-primary" data-testid="ai-submit" onClick={() => ask()} disabled={loading}>
+                <Icon name="spark" size={14} />
+                {loading ? "Pensando..." : "Perguntar à IA"}
+              </button>
+              {!userId && <span className="muted" style={{fontSize: 12.5}}>Crie ou selecione um usuário para dados personalizados.</span>}
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-head">
+            <div className="lead">
+              <h3>Perguntas sugeridas</h3>
+              <div className="hint">Atalhos para investigar seu mês.</div>
+            </div>
+          </div>
+          <div className="card-body" style={{display: "flex", gap: 8, flexWrap: "wrap"}}>
+            {AI_SUGGESTED_QUESTIONS.map((item) => (
+              <button
+                key={item}
+                className="btn btn-soft"
+                data-testid="ai-suggested-question"
+                onClick={() => ask(item)}
+                disabled={loading}
+                style={{fontSize: 12}}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="card" style={{marginTop: 18}}>
+        <div className="card-head">
+          <div className="lead">
+            <h3>Resposta</h3>
+            <div className="hint">Sem recomendação de compra ou venda de ativos.</div>
+          </div>
+        </div>
+        <div className="card-body">
+          <div data-testid="ai-answer" style={{whiteSpace: "pre-wrap", lineHeight: 1.65, fontSize: 14}}>
+            {answer || "Faça uma pergunta para ver a resposta da IA Financeira."}
+          </div>
+        </div>
+        <div className="card-foot">
+          <div data-testid="ai-disclaimer" style={{fontSize: 12.5, color: "var(--ink-3)"}}>{disclaimer}</div>
+        </div>
+      </div>
+
+      <div className="card" style={{marginTop: 18}}>
+        <div className="card-head">
+          <div className="lead">
+            <h3>Fontes usadas</h3>
+            <div className="hint">Nodos recuperados quando disponíveis.</div>
+          </div>
+        </div>
+        <div className="card-body" data-testid="ai-sources">
+          {sources.length === 0 ? (
+            <div className="muted" style={{fontSize: 13}}>Nenhuma fonte recuperada para esta resposta.</div>
+          ) : sources.map((source, idx) => (
+            <div key={`${source.path}-${idx}`} style={{padding: "10px 0", borderBottom: idx < sources.length - 1 ? "1px solid var(--divider)" : "none"}}>
+              <div style={{fontWeight: 600, fontSize: 13.5}}>{source.title}</div>
+              <div className="mono" style={{fontSize: 11.5, color: "var(--ink-4)", marginTop: 4}}>
+                {source.type} · score {source.score} · {source.path}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App />);

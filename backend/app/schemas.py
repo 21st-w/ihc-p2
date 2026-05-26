@@ -106,3 +106,24 @@ class FullAnalysisResponse(BaseModel):
     simulations: dict
     nodes_created: list[NodeResponse]
     obsidian_files: list[str]
+
+
+# ── IA / RAG ──────────────────────────────────────────────
+
+class AIChatRequest(BaseModel):
+    question: str
+
+
+class AIChatResponse(BaseModel):
+    success: bool
+    answer: str
+    sources: list = []
+    confidence: str = "baixa"
+    fallback_used: bool = False
+    educational_disclaimer: str
+
+
+class AIReindexResponse(BaseModel):
+    success: bool
+    indexed_chunks: int
+    message: str

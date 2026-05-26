@@ -6,6 +6,7 @@ Tabelas:
 - analyses: diagnósticos gerados pelo Freud
 - simulations: simulações geradas pelo Moriarty
 - nodes: nodos do Second Brain (Athena)
+- knowledge_chunks: chunks com embeddings locais para RAG
 """
 
 from datetime import datetime, timezone
@@ -32,6 +33,7 @@ class User(Base):
     analyses = relationship("Analysis", back_populates="user")
     simulations = relationship("Simulation", back_populates="user")
     nodes = relationship("Node", back_populates="user")
+    knowledge_chunks = relationship("KnowledgeChunk", back_populates="user")
 
 
 class FinancialProfile(Base):
@@ -102,3 +104,23 @@ class Node(Base):
     created_at = Column(DateTime, default=_utcnow)
 
     user = relationship("User", back_populates="nodes")
+    chunks = relationship("KnowledgeChunk", back_populates="node")
+
+
+class KnowledgeChunk(Base):
+    """Chunk de conhecimento indexado com embedding em JSON."""
+    __tablename__ = "knowledge_chunks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    node_id = Column(Integer, ForeignKey("nodes.id"), nullable=True)
+    source_title = Column(String(200), nullable=False)
+    source_path = Column(String(500), default="")
+    source_type = Column(String(50), default="node")
+    chunk_index = Column(Integer, default=0)
+    content = Column(Text, nullable=False)
+    embedding_json = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=_utcnow)
+
+    user = relationship("User", back_populates="knowledge_chunks")
+    node = relationship("Node", back_populates="chunks")

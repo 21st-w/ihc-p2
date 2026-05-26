@@ -596,7 +596,7 @@ const ClientViewer = ({ state, setState, userId, toast = () => {} }) => {
     setAsking(true);
     try {
       if (!userId) throw new Error("local fallback");
-      const result = await api.askRag(userId, q);
+      const result = await api.askAI(userId, q);
       setAnswer(result.answer || result.summary || buildLocalAnswer(q));
     } catch (e) {
       setAnswer(buildLocalAnswer(q));
