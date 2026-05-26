@@ -1,0 +1,9 @@
+# Tio Patinhas — Backend Dependencies
+fastapi>=0.115
+uvicorn[standard]>=0.34
+sqlalchemy>=2.0
+pydantic>=2.11
+pydantic-settings>=2.9
+python-dotenv>=1.0
+aiosqlite>=0.20
+email-validator>=2.0
