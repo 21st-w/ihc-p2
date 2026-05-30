@@ -1,0 +1,248 @@
+<!-- Protótipo Tio Patinhas - IHC 2026.1 -->
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tio Patinhas — Gerenciador Financeiro</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a href="#main" class="skip">Pular para o conteúdo</a>
+<div class="wrap">
+
+  <!-- ===== TOPO ===== -->
+  <header class="topbar">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="48" fill="#155c44"/>
+        <circle cx="50" cy="50" r="38" fill="#e8b84b"/>
+        <text x="50" y="64" font-family="Fraunces,serif" font-size="40" font-weight="800" fill="#0c3a2c" text-anchor="middle">$</text>
+        <path class="mascot-bill" d="M64 38 q14 4 14 12 q-7 3 -14 0Z" fill="#c9912a"/>
+      </svg>
+      <div>
+        <h1>Tio Patinhas</h1>
+        <div class="tag">Seu gestor financeiro</div>
+      </div>
+    </div>
+    <button class="a11y-btn" id="a11yToggle" aria-expanded="false" aria-controls="a11yPanel">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="5" r="2"/><path d="M4 8h16M12 8v8m0 0l-3 5m3-5l3 5"/></svg>
+      Acessibilidade
+    </button>
+  </header>
+
+  <!-- ===== PAINEL ACESSIBILIDADE ===== -->
+  <section class="a11y-panel" id="a11yPanel" aria-label="Opções de acessibilidade">
+    <h3>Ajustes de acessibilidade visual</h3>
+    <p class="sub" style="margin:0">Personalize a leitura da tela conforme sua necessidade.</p>
+    <div class="a11y-row">
+      <span>Tamanho da fonte</span>
+      <button class="pill" id="fsMinus" aria-label="Diminuir fonte">A−</button>
+      <button class="pill" id="fsReset" aria-pressed="true">Padrão</button>
+      <button class="pill" id="fsPlus" aria-label="Aumentar fonte">A+</button>
+    </div>
+    <div class="a11y-row">
+      <span>Alto contraste</span>
+      <button class="pill" id="contrastBtn" aria-pressed="false">Desativado</button>
+    </div>
+  </section>
+
+  <!-- ===== NAVEGAÇÃO ===== -->
+  <nav class="tabs" role="tablist" aria-label="Telas do sistema" id="main">
+    <button class="tab" role="tab" aria-selected="true" data-screen="s1">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 13h4l3 7 4-14 3 7h4"/></svg>
+      Finanças
+    </button>
+    <button class="tab" role="tab" aria-selected="false" data-screen="s2">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.4 8.4 0 0 1-12.3 7.4L3 21l2.1-5.7A8.4 8.4 0 1 1 21 11.5Z"/></svg>
+      Assistente
+    </button>
+    <button class="tab" role="tab" aria-selected="false" data-screen="s3">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5m0 14h16M8 15l3-4 3 3 5-7"/></svg>
+      Simulador
+    </button>
+  </nav>
+
+  <!-- ===================== TELA 1 ===================== -->
+  <section class="screen active" id="s1" role="tabpanel" aria-label="Gerenciador de finanças">
+    <div class="grid g2">
+      <div>
+        <!-- Renda -->
+        <div class="card">
+          <h2>Minha renda</h2>
+          <p class="sub">Informe suas fontes de renda.</p>
+          <ul class="exp-list" id="list-renda"></ul>
+          <div class="add-row">
+            <input class="input" id="nr" placeholder="Ex.: Salário">
+            <input class="input" id="vr" type="number" placeholder="R$" style="max-width:110px">
+            <button class="btn" data-add="renda">+ Adicionar</button>
+          </div>
+        </div>
+
+        <!-- Gastos fixos -->
+        <div class="card">
+          <h2>Gastos fixos</h2>
+          <p class="sub">Contas que se repetem todo mês.</p>
+          <ul class="exp-list" id="list-fixos"></ul>
+          <div class="add-row">
+            <input class="input" id="nf" placeholder="Ex.: Aluguel">
+            <input class="input" id="vf" type="number" placeholder="R$" style="max-width:110px">
+            <button class="btn" data-add="fixos">+ Adicionar</button>
+          </div>
+        </div>
+
+        <!-- Gastos variáveis -->
+        <div class="card">
+          <h2>Gastos variáveis</h2>
+          <p class="sub">Mudam de mês para mês.</p>
+          <ul class="exp-list" id="list-var"></ul>
+          <div class="add-row">
+            <input class="input" id="nv" placeholder="Ex.: Mercado">
+            <input class="input" id="vv" type="number" placeholder="R$" style="max-width:110px">
+            <button class="btn" data-add="var">+ Adicionar</button>
+          </div>
+        </div>
+
+        <!-- Assinaturas -->
+        <div class="card">
+          <h2>Assinaturas</h2>
+          <p class="sub">Serviços recorrentes.</p>
+          <ul class="exp-list" id="list-ass"></ul>
+          <div class="add-row">
+            <input class="input" id="na" placeholder="Ex.: Streaming">
+            <input class="input" id="va" type="number" placeholder="R$" style="max-width:110px">
+            <button class="btn" data-add="ass">+ Adicionar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resumo -->
+      <div>
+        <div class="card" style="position:sticky;top:90px">
+          <h2>Resumo do mês</h2>
+          <p class="sub">Atualiza automaticamente.</p>
+          <div class="grid" style="grid-template-columns:1fr 1fr;gap:11px">
+            <div class="kpi pos"><span class="lbl">Receita</span><span class="val" id="kReceita">R$ 0</span></div>
+            <div class="kpi neg"><span class="lbl">Despesas</span><span class="val" id="kDesp">R$ 0</span></div>
+          </div>
+          <div class="kpi pos" style="margin-top:11px"><span class="lbl">Saldo disponível</span><span class="val" id="kSaldo">R$ 0</span></div>
+
+          <p class="field" style="margin:16px 0 0">Comprometimento da renda</p>
+          <div class="progress"><i id="barUse" style="width:0%"></i></div>
+          <small class="footnote" id="useTxt" style="margin-top:6px">—</small>
+
+          <!-- Gráfico donut SVG -->
+          <div style="display:flex;align-items:center;gap:18px;margin-top:18px">
+            <svg width="120" height="120" viewBox="0 0 42 42" id="donut" aria-label="Gráfico de gastos por categoria" role="img">
+              <circle cx="21" cy="21" r="15.9" fill="none" stroke="var(--bg)" stroke-width="6"/>
+              <circle id="arcF" cx="21" cy="21" r="15.9" fill="none" stroke="var(--info)" stroke-width="6" stroke-dasharray="0 100" transform="rotate(-90 21 21)"/>
+              <circle id="arcV" cx="21" cy="21" r="15.9" fill="none" stroke="var(--warning)" stroke-width="6" stroke-dasharray="0 100" transform="rotate(-90 21 21)"/>
+              <circle id="arcA" cx="21" cy="21" r="15.9" fill="none" stroke="var(--success)" stroke-width="6" stroke-dasharray="0 100" transform="rotate(-90 21 21)"/>
+            </svg>
+            <div class="legend">
+              <div><span class="dot" style="background:var(--info)"></span> Fixos <b id="lgF" style="margin-left:auto"></b></div>
+              <div><span class="dot" style="background:var(--warning)"></span> Variáveis <b id="lgV"></b></div>
+              <div><span class="dot" style="background:var(--success)"></span> Assinaturas <b id="lgA"></b></div>
+            </div>
+          </div>
+
+          <div class="banner" id="advice" style="margin-top:18px">
+            <span class="em">i</span>
+            <div><b>Dica do Tio Patinhas:</b> <span id="adviceTxt">Preencha seus dados para receber recomendações.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== TELA 2 — CHATBOT ===================== -->
+  <section class="screen" id="s2" role="tabpanel" aria-label="Assistente virtual">
+    <div class="card">
+      <div class="chat-wrap">
+        <div class="chat-head">
+          <svg class="ava" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="48" fill="#155c44"/><circle cx="50" cy="50" r="34" fill="#e8b84b"/><text x="50" y="62" font-family="Fraunces,serif" font-size="34" font-weight="800" fill="#0c3a2c" text-anchor="middle">$</text></svg>
+          <div>
+            <div style="font-family:'Fraunces',serif;font-weight:800;font-size:1.15rem;color:var(--primary-900)">Assistente Patinhas</div>
+            <div class="st">online — tire suas dúvidas financeiras</div>
+          </div>
+        </div>
+
+        <div class="chat-body" id="chatBody" aria-live="polite">
+          <div class="msg bot">Oi! Eu sou o assistente do Tio Patinhas. Posso te ajudar a entender seus gastos, sugerir economias e explicar investimentos. O que você quer saber?</div>
+          <div class="msg user">Estou gastando demais com assinaturas, o que faço?</div>
+          <div class="msg bot">Boa pergunta! Você tem 3 assinaturas somando R$ 89,70/mês — isso dá <b>R$ 1.076</b> por ano. Que tal revisar quais você realmente usa? Posso te mostrar onde cortar.</div>
+        </div>
+
+        <div class="chips" id="chips">
+          <button class="chip">Como economizar?</button>
+          <button class="chip">Quanto posso investir?</button>
+          <button class="chip">Explique a poupança</button>
+        </div>
+
+        <div class="chat-input">
+          <label class="skip" for="chatTxt">Escreva sua mensagem</label>
+          <input class="input" id="chatTxt" placeholder="Escreva sua mensagem...">
+          <button class="btn send accent" id="chatSend" aria-label="Enviar mensagem">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <p class="footnote">Protótipo: o assistente apresenta respostas pré-definidas para demonstrar a experiência da conversa (não conectado a uma IA real nesta versão).</p>
+  </section>
+
+  <!-- ===================== TELA 3 — SIMULADOR ===================== -->
+  <section class="screen" id="s3" role="tabpanel" aria-label="Simulador de investimentos">
+    <div class="grid g2">
+      <div class="card">
+        <h2>Simulador de investimentos</h2>
+        <p class="sub">Veja quanto seu dinheiro pode render.</p>
+
+        <label class="field">Tipo de aplicação</label>
+        <div class="seg" id="seg" role="group" aria-label="Tipo de investimento">
+          <button data-rate="0.005" data-risk="low" aria-pressed="true">Poupança</button>
+          <button data-rate="0.0095" data-risk="mid" aria-pressed="false">CDB / Tesouro</button>
+          <button data-rate="0.012" data-risk="high" aria-pressed="false">Ações</button>
+        </div>
+
+        <div class="inline" style="margin-top:16px">
+          <div>
+            <label class="field" for="initial">Valor inicial</label>
+            <input class="input" id="initial" type="number" value="1000">
+          </div>
+          <div>
+            <label class="field" for="monthly">Aporte mensal</label>
+            <input class="input" id="monthly" type="number" value="200">
+          </div>
+        </div>
+
+        <label class="field" style="margin-top:16px">Período: <span class="rng-val" id="periodLbl">24 meses</span></label>
+        <input type="range" id="period" min="6" max="120" step="6" value="24" aria-label="Período em meses">
+
+        <button class="btn accent" id="simulate" style="margin-top:18px;width:100%;justify-content:center">Simular rendimento</button>
+        <p class="footnote">Taxas médias usadas apenas para simulação educativa. Investimentos em ações têm risco e podem ter rentabilidade negativa.</p>
+      </div>
+
+      <div>
+        <div class="card">
+          <h2>Resultado da simulação</h2>
+          <div class="grid" style="grid-template-columns:1fr 1fr;gap:11px">
+            <div class="kpi"><span class="lbl">Total investido</span><span class="val" id="rInvest">R$ 0</span></div>
+            <div class="kpi pos"><span class="lbl">Valor final</span><span class="val" id="rFinal">R$ 0</span></div>
+          </div>
+          <div class="kpi pos" style="margin-top:11px"><span class="lbl">Rendimento ganho</span><span class="val" id="rGain">R$ 0</span> <span class="risk low" id="riskTag">baixo risco</span></div>
+          <div class="bars" id="bars" aria-hidden="true"></div>
+        </div>
+        <div class="card">
+          <h2>Compare as opções</h2>
+          <table class="cmp"><thead><tr><th>Aplicação</th><th>Valor final</th><th>Risco</th></tr></thead>
+          <tbody id="cmpBody"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
