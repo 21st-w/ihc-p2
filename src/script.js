@@ -32,11 +32,31 @@ document.getElementById('fsMinus').onclick = () => setFs(fs - 2);
 document.getElementById('fsReset').onclick = () => setFs(16);
 
 const cb = document.getElementById('contrastBtn');
+const db = document.getElementById('darkModeBtn');
+
 cb.onclick = () => {
   const on = body.classList.toggle('contrast');
   cb.setAttribute('aria-pressed', on);
   cb.textContent = on ? 'Ativado' : 'Desativado';
+  if (on && db) {
+    body.classList.remove('dark');
+    db.setAttribute('aria-pressed', false);
+    db.textContent = 'Desativado';
+  }
 };
+
+if (db) {
+  db.onclick = () => {
+    const on = body.classList.toggle('dark');
+    db.setAttribute('aria-pressed', on);
+    db.textContent = on ? 'Ativado' : 'Desativado';
+    if (on && cb) {
+      body.classList.remove('contrast');
+      cb.setAttribute('aria-pressed', false);
+      cb.textContent = 'Desativado';
+    }
+  };
+}
 
 /* ============ TELA 1 — GERENCIADOR ============ */
 const data = {
