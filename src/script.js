@@ -198,6 +198,7 @@ document.querySelectorAll('#seg button').forEach(b => {
 const period = document.getElementById('period');
 period.addEventListener('input', () => {
   document.getElementById('periodLbl').textContent = period.value + ' meses';
+  simulate();
 });
 
 function fv(init, mon, r, m) {
@@ -240,6 +241,5 @@ function simulate() {
   ).join('');
 }
 
-document.getElementById('simulate').onclick = simulate;
 ['initial', 'monthly'].forEach(id => document.getElementById(id).addEventListener('input', simulate));
 simulate();

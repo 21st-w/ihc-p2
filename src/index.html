@@ -235,7 +235,6 @@
         <label class="field" style="margin-top:16px"><span data-i18n="simPeriod">Período:</span> <span class="rng-val" id="periodLbl">24 meses</span></label>
         <input type="range" id="period" min="6" max="120" step="6" value="24" aria-label="Período em meses">
 
-        <button class="btn accent" id="simulate" style="margin-top:18px;width:100%;justify-content:center" data-i18n="simBtn">Simular rendimento</button>
         <p class="footnote" data-i18n="simFootnote">Taxas médias usadas apenas para simulação educativa. Investimentos em ações têm risco e podem ter rentabilidade negativa.</p>
       </div>
 
@@ -262,5 +261,17 @@
 
 <script src="i18n.js"></script>
 <script src="script.js"></script>
+
+<!-- VLibras -->
+<div vw class="enabled">
+  <div vw-access-button class="active"></div>
+  <div vw-plugin-wrapper>
+    <div class="vw-plugin-top-wrapper"></div>
+  </div>
+</div>
+<script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+<script>
+  new window.VLibras.Widget('https://vlibras.gov.br/app');
+</script>
 </body>
 </html>

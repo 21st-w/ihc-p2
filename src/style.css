@@ -13,10 +13,10 @@
   --text-muted: #4b5563;
   --border: #e4ddca;
   
-  --success: #10b981;
+  --success: #16a34a;
   --danger: #ef4444;
   --warning: #f59e0b;
-  --info: #059669;
+  --info: #3b82f6;
 
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
@@ -215,10 +215,15 @@ body.contrast .a11y-panel h3 { color: var(--accent); }
   font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
+  box-shadow: var(--shadow-sm);
   transition: all 0.2s ease;
 }
 
-.pill:hover { border-color: var(--accent); }
+.pill:hover { 
+  border-color: var(--accent); 
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
 
 .pill[aria-pressed="true"] {
   background: var(--primary-900);
