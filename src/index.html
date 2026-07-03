@@ -271,6 +271,16 @@
 </div>
 <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
 <script>
+  // Suprime o alerta nativo irritante do Unity WebGL caso o VLibras falhe
+  const _alert = window.alert;
+  window.alert = function(msg) {
+    if (typeof msg === 'string' && msg.includes('Unity')) {
+      console.warn('Alerta do Unity suprimido:', msg);
+      return;
+    }
+    _alert(msg);
+  };
+
   window.addEventListener('load', function() {
     try {
       new window.VLibras.Widget('https://vlibras.gov.br/app');
