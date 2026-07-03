@@ -61,6 +61,13 @@
       </span>
       <button class="pill" id="darkModeBtn" aria-pressed="false" data-i18n="btnDisabled">Desativado</button>
     </div>
+    <div class="a11y-row">
+      <span style="display:flex;align-items:center;gap:6px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+        <span data-i18n="vlibras">Tradutor de Libras <small style="color:var(--warning);font-weight:bold">(em teste)</small></span>
+      </span>
+      <button class="pill" id="vlibrasBtn" aria-pressed="false" data-i18n="btnDisabled">Desativado</button>
+    </div>
   </section>
 
   <!-- ===== NAVEGAÇÃO ===== -->
@@ -262,32 +269,12 @@
 <script src="i18n.js"></script>
 <script src="script.js"></script>
 
-<!-- VLibras -->
+<!-- VLibras (Carregamento Manual) -->
 <div vw class="enabled">
   <div vw-access-button class="active"></div>
   <div vw-plugin-wrapper>
     <div class="vw-plugin-top-wrapper"></div>
   </div>
 </div>
-<script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
-<script>
-  // Suprime o alerta nativo irritante do Unity WebGL caso o VLibras falhe
-  const _alert = window.alert;
-  window.alert = function(msg) {
-    if (typeof msg === 'string' && msg.includes('Unity')) {
-      console.warn('Alerta do Unity suprimido:', msg);
-      return;
-    }
-    _alert(msg);
-  };
-
-  window.addEventListener('load', function() {
-    try {
-      new window.VLibras.Widget('https://vlibras.gov.br/app');
-    } catch (e) {
-      console.warn("VLibras failed to initialize:", e);
-    }
-  });
-</script>
 </body>
 </html>

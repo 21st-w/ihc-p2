@@ -58,6 +58,54 @@ if (db) {
   };
 }
 
+const vb = document.getElementById('vlibrasBtn');
+let vlibrasLoaded = false;
+let vlibrasActive = false;
+if (vb) {
+  vb.onclick = () => {
+    const vwContainer = document.querySelector('[vw]');
+    vlibrasActive = !vlibrasActive;
+    
+    if (vlibrasLoaded) {
+      if (vwContainer) vwContainer.style.display = vlibrasActive ? 'block' : 'none';
+      vb.textContent = vlibrasActive ? 'Ativado' : 'Desativado';
+      vb.setAttribute('aria-pressed', vlibrasActive);
+      return;
+    }
+    
+    // Primeiro carregamento
+    vlibrasLoaded = true;
+    vb.textContent = 'Carregando...';
+    vb.setAttribute('aria-pressed', 'true');
+
+    // Suprime o alerta nativo irritante do Unity WebGL caso o VLibras falhe
+    const _alert = window.alert;
+    window.alert = function(msg) {
+      if (typeof msg === 'string' && msg.includes('Unity')) {
+        console.warn('Alerta do Unity suprimido:', msg);
+        return;
+      }
+      _alert(msg);
+    };
+
+    const script = document.createElement('script');
+    script.src = 'https://vlibras.gov.br/app/vlibras-plugin.js';
+    script.onload = () => {
+      try {
+        new window.VLibras.Widget('https://vlibras.gov.br/app');
+        vb.textContent = 'Ativado';
+      } catch (e) {
+        console.warn("VLibras failed to initialize:", e);
+        vb.textContent = 'Erro';
+      }
+    };
+    script.onerror = () => {
+      vb.textContent = 'Erro de rede';
+    };
+    document.body.appendChild(script);
+  };
+}
+
 /* ============ TELA 1 — GERENCIADOR ============ */
 const data = {
   renda: [{ n: 'Salário', v: 3200 }],
